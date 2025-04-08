@@ -6,8 +6,9 @@ A simple terminal user interface wrapper around the Canvas LMS
 
 Create a '.env' file in the root directory of the project and populate with:
 ```
-CANVAS_API_TOKEN = your_api_key
+CANVAS_API_TOKEN = "your_api_key"
 ```
+Currently data storage is only supported on *nix systems (stored in ~/.local/share/canvas-tui/).
 
 ### Background
 
@@ -21,11 +22,12 @@ functional web frontend.
 ### TODO
 - [X] Fix TUI async refresh
 - [X] Fix data file path
-- [X] Spawn browser in the background
 - [X] Remove server feature
 - [ ] Make able to mark as completed from interface (make them gray)
 - [ ] Refactor to not use graphql_client (reqwest only) (hopefully speed up)
 - [ ] Make async refresh only update changed data (to preserve completion status)
+- [ ] custom DIR_DIR for data files
 - [ ] Canvas assignment link scraping
 - [ ] Fix abhorrent load times for grades
 - [ ] Fetch external submission links
+- [ ] If browser is opened with open::this(url) for the first time, allow the browser to remain open after the program exits
