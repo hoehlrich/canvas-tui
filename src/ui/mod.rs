@@ -22,6 +22,8 @@ use std::{
     error::Error,
     io,
     time::{Duration, Instant},
+    path::Path,
+    env,
 };
 use app::{App, Dir};
 use std::sync::Arc;
@@ -162,7 +164,7 @@ async fn render_default<B: Backend>(terminal: &mut Terminal<B>, app: Arc<Mutex<A
 }
 
 
-pub async fn run(data: Data) -> Result<(), Box<dyn Error>>{
+pub async fn run(data: Data, path: String) -> Result<(), Box<dyn Error>>{
     // setup terminal
     enable_raw_mode()?;
     let mut stdout = io::stdout();
@@ -171,7 +173,11 @@ pub async fn run(data: Data) -> Result<(), Box<dyn Error>>{
     let mut terminal = Terminal::new(backend)?;
 
     // create app and run it
-    let app = Arc::new(Mutex::new(App::new(data, Duration::from_millis(1000))));
+    let app = Arc::new(
+        Mutex::new(
+            App::new(data, path, Duration::from_millis(1000))
+            )
+        );
 
     // Main loop and tick logic
     let mut last_tick = Instant::now();
@@ -214,7 +220,8 @@ async fn handle_input(app: Arc<Mutex<App>>) -> Result<bool, Box<dyn Error>> {
                 KeyCode::Char('j') => app.lock().await.mv(Dir::Down),
                 KeyCode::Char('k') => app.lock().await.mv(Dir::Up),
                 KeyCode::Char('q') => {
-                    app.lock().await.data.serialize_to_file("data.json")?;
+                    let app_lock = app.lock().await;
+                    app_lock.data.serialize_to_file(&app_lock.path)?;
                     return Ok(true)
                 },
                 KeyCode::Char('o') => app.lock().await.open(),

@@ -1,7 +1,6 @@
 use std::error::Error;
 use crate::types::assignment::Assignment;
 use crate::types::grade::Grade;
-use crate::types::link::Link;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
@@ -11,6 +10,13 @@ pub struct Data {
 }
 
 impl Data {
+    pub fn empty() -> Self {
+        Self {
+            assignments: Vec::new(),
+            grades: Vec::new(),
+        }
+    }
+
     pub async fn from_course_ids(course_ids: Vec<u32>, debug: bool) -> Result<Self, Box<dyn std::error::Error>> {
         if debug {
             println!("Fetching assignments...");
@@ -34,7 +40,6 @@ impl Data {
     pub fn serialize_to_file(&self, path: &str) -> Result<(), Box<dyn Error>> {
         let data = self.serialize()?;
         std::fs::write(path, data)?;
-
         Ok(())
     }
 

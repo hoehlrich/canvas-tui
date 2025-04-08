@@ -2,8 +2,8 @@ use tui::{
     style::{Color, Modifier, Style},
     widgets::{ListState, TableState},
 };
-use std::time::Duration;
 use tokio::sync::Mutex;
+use std::time::Duration;
 use std::sync::Arc;
 use std::error::Error;
 use crate::types::data::Data;
@@ -19,6 +19,7 @@ pub enum Widget {
 }
 
 pub struct App {
+    pub path: String,
     pub tick_rate: Duration,
     pub assignments_state: TableState,
     pub links_state: ListState,
@@ -27,8 +28,9 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(data: Data, tick_rate: Duration) -> App {
+    pub fn new(data: Data, path: String, tick_rate: Duration) -> Self {
         App {
+            path,
             tick_rate,
             assignments_state: TableState::default(),
             links_state: ListState::default(),
@@ -108,7 +110,6 @@ pub async fn refresh(app: Arc<Mutex<App>>) -> Result<(), Box<dyn Error>> {
                 return;
             }
         };
-        println!("Fetched assignments");
         app_clone.lock().await.data.assignments = assignments;
         let grades = match crate::queries::grades::query_grades(&course_ids).await {
             Ok(g) => g,
@@ -117,16 +118,15 @@ pub async fn refresh(app: Arc<Mutex<App>>) -> Result<(), Box<dyn Error>> {
                 return;
             }
         };
-        println!("Fetched grades");
         app_clone.lock().await.data.grades = grades;
-        match app_clone.lock().await.data.serialize_to_file("data.json") {
+        let path = app_clone.lock().await.path.clone();
+        match app_clone.lock().await.data.serialize_to_file(&path) {
             Ok(_) => (),
             Err(e) => {
                 eprintln!("Error saving data: {}", e);
                 return;
             }
         };
-        println!("Written to file");
     });
     
     Ok(())

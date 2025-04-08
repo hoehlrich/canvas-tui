@@ -19,10 +19,10 @@ functional web frontend.
 
 ### TODO
 - [X] Fix TUI async refresh
-- [ ] Fix data file path
+- [X] Fix data file path
+- [ ] Make able to mark as completed from interface (make them gray)
 - [ ] Refactor to not use graphql_client (reqwest only) (hopefully speed up)
-- [ ] Fix abhorrent load times for grades
+- [ ] Make async refresh only update changed data (to preserve completion status)
 - [ ] Canvas assignment link scraping
-- [ ] Actually determine whether assignment is completed
+- [ ] Fix abhorrent load times for grades
 - [ ] Fetch external submission links
-- [ ] Make able to mark as completed from interface
