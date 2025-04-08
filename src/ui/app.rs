@@ -99,21 +99,35 @@ impl App {
 
 pub async fn refresh(app: Arc<Mutex<App>>) -> Result<(), Box<dyn Error>> {
     let app_clone = Arc::clone(&app);
-    let handle = tokio::task::spawn(async move {
+    tokio::task::spawn(async move {
         let course_ids = vec![72125, 71983, 72567, 71447, 72767]; // Henry course IDs
-        let data;
-        match Data::from_course_ids(course_ids, false).await {
-            Ok(d) => data = d,
+        let assignments = match crate::queries::assignments::query_assignments(&course_ids).await {
+            Ok(a) => a,
             Err(e) => {
-                eprintln!("Error fetching data: {}", e);
+                eprintln!("Error fetching assignments: {}", e);
                 return;
             }
-        }
-        let mut app = app_clone.lock().await;
-        app.data = data;
+        };
+        println!("Fetched assignments");
+        app_clone.lock().await.data.assignments = assignments;
+        let grades = match crate::queries::grades::query_grades(&course_ids).await {
+            Ok(g) => g,
+            Err(e) => {
+                eprintln!("Error fetching grades: {}", e);
+                return;
+            }
+        };
+        println!("Fetched grades");
+        app_clone.lock().await.data.grades = grades;
+        match app_clone.lock().await.data.serialize_to_file("data.json") {
+            Ok(_) => (),
+            Err(e) => {
+                eprintln!("Error saving data: {}", e);
+                return;
+            }
+        };
+        println!("Written to file");
     });
-    handle.await?;
-    app.lock().await.data.serialize_to_file("data.json")?;
     
     Ok(())
 }

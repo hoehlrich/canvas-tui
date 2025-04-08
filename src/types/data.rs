@@ -23,7 +23,6 @@ impl Data {
         let grades = crate::queries::grades::query_grades(&course_ids).await?;
         if debug {
             println!("Fetched {} grades", grades.len());
-            println!("Begin groq analysis...");
         }
         Ok(Self { assignments, grades })
     }

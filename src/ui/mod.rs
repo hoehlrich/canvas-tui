@@ -213,7 +213,10 @@ async fn handle_input(app: Arc<Mutex<App>>) -> Result<bool, Box<dyn Error>> {
             KeyModifiers::NONE => match key.code {
                 KeyCode::Char('j') => app.lock().await.mv(Dir::Down),
                 KeyCode::Char('k') => app.lock().await.mv(Dir::Up),
-                KeyCode::Char('q') => return Ok(true),
+                KeyCode::Char('q') => {
+                    app.lock().await.data.serialize_to_file("data.json")?;
+                    return Ok(true)
+                },
                 KeyCode::Char('o') => app.lock().await.open(),
                 KeyCode::Char('r') => app::refresh(app).await?,
                 KeyCode::Enter => app.lock().await.enter(),

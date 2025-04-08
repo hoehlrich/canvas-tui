@@ -18,8 +18,9 @@ this projects backend connects back to the original project to provide a more
 functional web frontend.
 
 ### TODO
+- [X] Fix TUI async refresh
+- [ ] Fix data file path
 - [ ] Refactor to not use graphql_client (reqwest only) (hopefully speed up)
-- [ ] Fix TUI async refresh
 - [ ] Fix abhorrent load times for grades
 - [ ] Canvas assignment link scraping
 - [ ] Actually determine whether assignment is completed
