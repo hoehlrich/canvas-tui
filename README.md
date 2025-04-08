@@ -20,6 +20,8 @@ functional web frontend.
 ### TODO
 - [X] Fix TUI async refresh
 - [X] Fix data file path
+- [X] Spawn browser in the background
+- [X] Remove server feature
 - [ ] Make able to mark as completed from interface (make them gray)
 - [ ] Refactor to not use graphql_client (reqwest only) (hopefully speed up)
 - [ ] Make async refresh only update changed data (to preserve completion status)

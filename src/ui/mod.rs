@@ -224,7 +224,7 @@ async fn handle_input(app: Arc<Mutex<App>>) -> Result<bool, Box<dyn Error>> {
                     app_lock.data.serialize_to_file(&app_lock.path)?;
                     return Ok(true)
                 },
-                KeyCode::Char('o') => app.lock().await.open(),
+                KeyCode::Char('o') => app.lock().await.open().await,
                 KeyCode::Char('r') => app::refresh(app).await?,
                 KeyCode::Enter => app.lock().await.enter(),
                 KeyCode::Esc => app.lock().await.esc(),

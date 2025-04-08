@@ -39,12 +39,14 @@ impl App {
         }
     }
 
-    pub fn open(&self) {
+    pub async fn open(&self) {
         match self.active_widget {
             Widget::Assignments => {
                 if let Some(i) = self.assignments_state.selected() {
-                    let assignment = &self.data.assignments[i];
-                    open::that(&assignment.html_url).unwrap();
+                    let url = self.data.assignments[i].html_url.clone();
+                    tokio::task::spawn(async move {
+                        let _ = open::that(url);
+                    });
                 }
             },
         }
