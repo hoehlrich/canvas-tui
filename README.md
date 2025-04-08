@@ -4,9 +4,10 @@ A simple terminal user interface wrapper around the Canvas LMS
 
 ### Setup
 
-Env variable setup:
-- Create a '.env' file in the root directory of the project
-- Create a Canvas API key and export it as `CANVAS_API_KEY` in the `.env` file
+Create a '.env' file in the root directory of the project and populate with:
+```
+CANVAS_API_TOKEN = your_api_key
+```
 
 ### Background
 
