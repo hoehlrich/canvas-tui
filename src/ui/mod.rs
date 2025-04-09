@@ -47,8 +47,12 @@ async fn render_assignments(app: Arc<Mutex<App>>) -> Table<'static> {
             format!("{}", a.name),
             format!("{}", date),
         ];
-        Row::new(cells)
-        
+        let style = if a.completed {
+            Style::default().fg(Color::DarkGray).add_modifier(Modifier::CROSSED_OUT)
+        } else {
+            Style::default()
+        };
+        Row::new(cells).style(style)
     });
     let selected_style = Style::default().fg(Color::LightGreen).add_modifier(Modifier::BOLD);
     let table = Table::new(rows)
@@ -165,19 +169,22 @@ async fn render_default<B: Backend>(terminal: &mut Terminal<B>, app: Arc<Mutex<A
 
 
 pub async fn run(data: Data, path: String) -> Result<(), Box<dyn Error>>{
-    // setup terminal
+    // Setup terminal
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    // create app and run it
+    // Create app and run it
     let app = Arc::new(
         Mutex::new(
             App::new(data, path, Duration::from_millis(1000))
             )
         );
+
+    // Initial refres
+    app::refresh(app.clone()).await?;
 
     // Main loop and tick logic
     let mut last_tick = Instant::now();
@@ -201,7 +208,7 @@ pub async fn run(data: Data, path: String) -> Result<(), Box<dyn Error>>{
     }
 
 
-    // restore terminal
+    // Restore terminal
     disable_raw_mode()?;
     execute!(
         terminal.backend_mut(),
@@ -226,6 +233,7 @@ async fn handle_input(app: Arc<Mutex<App>>) -> Result<bool, Box<dyn Error>> {
                 },
                 KeyCode::Char('o') => app.lock().await.open().await,
                 KeyCode::Char('r') => app::refresh(app).await?,
+                KeyCode::Char('d') => app.lock().await.mark_done(),
                 KeyCode::Enter => app.lock().await.enter(),
                 KeyCode::Esc => app.lock().await.esc(),
                 _ => (),

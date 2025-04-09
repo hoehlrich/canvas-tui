@@ -1,4 +1,4 @@
-use std::error::Error;
+use std::{error::Error, ops::Not};
 use crate::types::assignment::Assignment;
 use crate::types::grade::Grade;
 use serde::{Deserialize, Serialize};
@@ -31,6 +31,17 @@ impl Data {
             println!("Fetched {} grades", grades.len());
         }
         Ok(Self { assignments, grades })
+    }
+
+    pub fn update_assignments(&mut self, assignments: Vec<Assignment>) {
+        for assignment in assignments {
+            if let Some(a) = self.assignments.iter_mut().find(|a| a.html_url == assignment.html_url) {
+                a.completed |= assignment.completed;
+            } else {
+                self.assignments.push(assignment);
+            }
+        }
+        self.assignments.sort_by(|a, b| a.date.cmp(&b.date));
     }
 
     pub fn serialize(&self) -> Result<String, Box<dyn Error>> {

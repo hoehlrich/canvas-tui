@@ -9,10 +9,19 @@ pub struct Assignment {
     pub html_url: String,
     pub date: Option<DateTime<FixedOffset>>,
     pub course: String,
+    pub completed: bool,
 }
 
 impl Assignment {
-    pub fn new(name: String, nickname: Option<String>, description: Option<String>, html_url: String, datestring: Option<String>, course: String) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn new(
+        name: String,
+        nickname: Option<String>,
+        description: Option<String>,
+        html_url: String,
+        datestring: Option<String>,
+        course: String,
+        completed: bool,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
         let course = if let Some(nickname) = nickname {
             nickname
         } else {
@@ -31,6 +40,7 @@ impl Assignment {
             html_url,
             date,
             course,
+            completed,
         })
     }
 }
@@ -38,7 +48,13 @@ impl Assignment {
 impl std::fmt::Display for Assignment {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if let Some(date) = self.date {
-            write!(f, "{} - {} ({})", self.course, self.name, date.format("%A %d"))
+            write!(
+                f,
+                "{} - {} ({})",
+                self.course,
+                self.name,
+                date.format("%A %d")
+            )
         } else {
             write!(f, "{} - {} (No due date)", self.course, self.name)
         }

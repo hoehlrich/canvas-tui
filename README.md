@@ -8,6 +8,13 @@ Create a '.env' file in the root directory of the project and populate with:
 ```
 CANVAS_API_TOKEN = "your_api_key"
 ```
+
+This project will respect Canvas' course nicknames and it is HIGHLY recommended
+to nickname your courses in canvas to something short (ex: "CALCULUS FOR
+SCIENTISTS AND ENGINEERS III" -> "MATH 213"). This can be done by going to the
+canvas dashboard in "Card View" and modifying the course nickname in the card
+properties.
+
 Currently data storage is only supported on *nix systems (stored in ~/.local/share/canvas-tui/).
 
 ### Background
@@ -23,11 +30,16 @@ functional web frontend.
 - [X] Fix TUI async refresh
 - [X] Fix data file path
 - [X] Remove server feature
-- [ ] Make able to mark as completed from interface (make them gray)
+- [X] Make able to mark as completed from interface (make them gray)
+- [ ] Make items that have been submitted (as defined by the API) gray (instead of disappearing)
+- [ ] Auto-refresh on startup
 - [ ] Refactor to not use graphql_client (reqwest only) (hopefully speed up)
-- [ ] Make async refresh only update changed data (to preserve completion status)
-- [ ] custom DIR_DIR for data files
+- [X] Make async refresh only update changed data (to preserve completion status)
 - [ ] Canvas assignment link scraping
+- [ ] Course ID config
+- [ ] Query Course IDs if no config
+- [ ] Filter assignments by course (new pane idea??)
+- [ ] custom DIR_DIR for data files
 - [ ] Fix abhorrent load times for grades
 - [ ] Fetch external submission links
 - [ ] If browser is opened with open::this(url) for the first time, allow the browser to remain open after the program exits

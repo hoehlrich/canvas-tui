@@ -52,6 +52,17 @@ impl App {
         }
     }
 
+    pub fn mark_done(&mut self) {
+        match self.active_widget {
+            Widget::Assignments => {
+                if let Some(a) = self.assignments_state.selected() {
+                    let assignment = &mut self.data.assignments[a];
+                    assignment.completed = !assignment.completed;
+                }
+            }
+        }
+    }
+
     pub fn enter(&mut self) {
         ()
     }
@@ -104,7 +115,7 @@ impl App {
 pub async fn refresh(app: Arc<Mutex<App>>) -> Result<(), Box<dyn Error>> {
     let app_clone = Arc::clone(&app);
     tokio::task::spawn(async move {
-        let course_ids = vec![72125, 71983, 72567, 71447, 72767]; // Henry course IDs
+        let course_ids = vec![72125, 71983, 72567, 71447, 72767, 72858]; // Henry course IDs
         let assignments = match crate::queries::assignments::query_assignments(&course_ids).await {
             Ok(a) => a,
             Err(e) => {
@@ -112,7 +123,7 @@ pub async fn refresh(app: Arc<Mutex<App>>) -> Result<(), Box<dyn Error>> {
                 return;
             }
         };
-        app_clone.lock().await.data.assignments = assignments;
+        app_clone.lock().await.data.update_assignments(assignments);
         let grades = match crate::queries::grades::query_grades(&course_ids).await {
             Ok(g) => g,
             Err(e) => {
