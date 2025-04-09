@@ -31,10 +31,10 @@ functional web frontend.
 - [X] Fix data file path
 - [X] Remove server feature
 - [X] Make able to mark as completed from interface (make them gray)
-- [ ] Make items that have been submitted (as defined by the API) gray (instead of disappearing)
-- [ ] Auto-refresh on startup
-- [ ] Refactor to not use graphql_client (reqwest only) (hopefully speed up)
+- [X] Make items that have been submitted (as defined by the API) gray (instead of disappearing)
+- [X] Auto-refresh on startup
 - [X] Make async refresh only update changed data (to preserve completion status)
+- [ ] Refactor to not use graphql_client (reqwest only) (hopefully speed up)
 - [ ] Canvas assignment link scraping
 - [ ] Course ID config
 - [ ] Query Course IDs if no config
