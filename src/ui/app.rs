@@ -84,7 +84,7 @@ impl App {
     pub fn next_assignment(&mut self) {
         if let Some(selected) = self.assignments_state.selected() {
             let next = if selected >= self.data.assignments.len() - 1 {
-                0
+                selected
             } else {
                 selected + 1
             };
@@ -97,7 +97,7 @@ impl App {
     pub fn prev_assignment(&mut self) {
         if let Some(selected) = self.assignments_state.selected() {
             let prev = if selected == 0 {
-                self.data.assignments.len() - 1
+                0
             } else {
                 selected - 1
             };
@@ -115,7 +115,7 @@ impl App {
 pub async fn refresh(app: Arc<Mutex<App>>) -> Result<(), Box<dyn Error>> {
     let app_clone = Arc::clone(&app);
     tokio::task::spawn(async move {
-        let course_ids = vec![72125, 71983, 72567, 71447, 72767, 72858]; // Henry course IDs
+        let course_ids = app.lock().await.data.course_ids.clone();
         let assignments = match crate::queries::assignments::query_assignments(&course_ids).await {
             Ok(a) => a,
             Err(e) => {
@@ -123,6 +123,7 @@ pub async fn refresh(app: Arc<Mutex<App>>) -> Result<(), Box<dyn Error>> {
                 return;
             }
         };
+
         app_clone.lock().await.data.update_assignments(assignments);
         let grades = match crate::queries::grades::query_grades(&course_ids).await {
             Ok(g) => g,
@@ -131,6 +132,7 @@ pub async fn refresh(app: Arc<Mutex<App>>) -> Result<(), Box<dyn Error>> {
                 return;
             }
         };
+        app_clone.lock().await.data.remove_past_assignments();
         app_clone.lock().await.data.grades = grades;
         let path = app_clone.lock().await.path.clone();
         match app_clone.lock().await.data.serialize_to_file(&path) {

@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 pub struct Data {
     pub assignments: Vec<Assignment>,
     pub grades: Vec<Grade>,
+    pub course_ids: Vec<u32>,
 }
 
 impl Data {
@@ -14,10 +15,11 @@ impl Data {
         Self {
             assignments: Vec::new(),
             grades: Vec::new(),
+            course_ids: Vec::new(),
         }
     }
 
-    pub async fn from_course_ids(course_ids: Vec<u32>, debug: bool) -> Result<Self, Box<dyn std::error::Error>> {
+    pub async fn from_course_ids(course_ids: Vec<u32>, debug: bool) -> Result<Self, Box<dyn Error>> {
         if debug {
             println!("Fetching assignments...");
         }
@@ -30,7 +32,18 @@ impl Data {
         if debug {
             println!("Fetched {} grades", grades.len());
         }
-        Ok(Self { assignments, grades })
+        Ok(Self { assignments, grades, course_ids})
+    }
+
+    pub fn remove_past_assignments(&mut self) {
+        let now = chrono::Utc::now();
+        self.assignments.retain(|a| {
+            if let Some(date) = a.date {
+                date > now
+            } else {
+                true
+            }
+        });
     }
 
     pub fn update_assignments(&mut self, assignments: Vec<Assignment>) {
@@ -42,6 +55,10 @@ impl Data {
             }
         }
         self.assignments.sort_by(|a, b| a.date.cmp(&b.date));
+    }
+
+    pub fn get_number_incomplete(&self) -> usize {
+        self.assignments.iter().filter(|a| !a.completed).count()
     }
 
     pub fn serialize(&self) -> Result<String, Box<dyn Error>> {

@@ -1,6 +1,7 @@
 use crate::types::link::Link;
 use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
+use std::error::Error;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Assignment {
@@ -21,7 +22,7 @@ impl Assignment {
         datestring: Option<String>,
         course: String,
         completed: bool,
-    ) -> Result<Self, Box<dyn std::error::Error>> {
+    ) -> Result<Self, Box<dyn Error>> {
         let course = if let Some(nickname) = nickname {
             nickname
         } else {

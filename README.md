@@ -17,13 +17,15 @@ properties.
 
 Currently data storage is only supported on *nix systems (stored in ~/.local/share/canvas-tui/).
 
+NOTE: course-ids are current hard coded so it will not automatically link to courses from your API key
+
 ### Background
 
 This project originated as a BlasterHacks 2025 project [canvas.lte](https://github.com/hoehlrich/canvas-tui)
 programmed in conjunction with [shauryasaxenas](https://github.com/shauryasaxenas). This fork is an attempt to
 remedy the various issues with the original project in a smaller scope: just
 the Canvas API and TUI (removed web frontend and groq integration). Ideally,
-this projects backend connects back to the original project to provide a more
+this project's backend connects back to the original project to provide a more
 functional web frontend.
 
 ### TODO
@@ -34,12 +36,17 @@ functional web frontend.
 - [X] Make items that have been submitted (as defined by the API) gray (instead of disappearing)
 - [X] Auto-refresh on startup
 - [X] Make async refresh only update changed data (to preserve completion status)
+- [X] Make # of upcoming assignments respect completed assignments
+- [X] Prevent scroll up down wraparound
+- [X] Fix issue: can only refresh when run using 'cargo r'
 - [ ] Refactor to not use graphql_client (reqwest only) (hopefully speed up)
+- [ ] Errors pop up in box instead of randomly printing
+- [ ] Manually hiding assignments (that are in class) (maybe grey but not crossed out)
 - [ ] Canvas assignment link scraping
 - [ ] Course ID config
 - [ ] Query Course IDs if no config
 - [ ] Filter assignments by course (new pane idea??)
-- [ ] custom DIR_DIR for data files
+- [ ] custom DIR for data files
 - [ ] Fix abhorrent load times for grades
 - [ ] Fetch external submission links
 - [ ] If browser is opened with open::this(url) for the first time, allow the browser to remain open after the program exits

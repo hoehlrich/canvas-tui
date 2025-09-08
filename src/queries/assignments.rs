@@ -53,6 +53,7 @@ async fn perform_query(variables: get_assignments::Variables) -> Result<get_assi
 
 fn parse_assignments(responses: Vec<get_assignments::ResponseData>) -> Result<Vec<Assignment>, Box<dyn Error>> {
     let mut assignments: Vec<Assignment> = vec![];
+    let now = chrono::Utc::now();
     for response in responses {
         if let Some(course) = response.course {
             // Iterate over assignments
@@ -71,14 +72,13 @@ fn parse_assignments(responses: Vec<get_assignments::ResponseData>) -> Result<Ve
                     )?;
                 if let Some(due) = assignment.date {
                     // If assignment due within 14 days, add to list
-                    let now = chrono::Utc::now();
                     if due > now && due < now + chrono::Duration::days(14) {
                         assignments.push(assignment);
                     }
                 }
             }
         } else {
-            eprintln!("No course data found");
+            return Err("Assignment parsing failed".into());
         }
     }
 

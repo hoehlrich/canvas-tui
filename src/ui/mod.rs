@@ -1,41 +1,43 @@
 mod app;
 
 use crate::types::data::Data;
+use app::{App, Dir};
+use crossterm::{
+    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyModifiers},
+    execute,
+    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
+};
+use std::sync::Arc;
+use std::{
+    env,
+    error::Error,
+    io,
+    path::Path,
+    time::{Duration, Instant},
+};
+use tokio::sync::Mutex;
 use tui::{
+    Frame, Terminal,
     backend::{Backend, CrosstermBackend},
     layout::{Alignment, Constraint, Direction, Layout, Rect},
-    style::{Color, Style, Modifier},
+    style::{Color, Modifier, Style},
     symbols,
     text::Span,
     widgets::{
         Axis, Block, Borders, Cell, Chart, Dataset, GraphType, List, ListItem, Paragraph, Row,
         Table, Wrap,
     },
-    Frame, Terminal,
 };
-use crossterm::{
-    event::{self, Event, KeyCode, KeyModifiers, DisableMouseCapture, EnableMouseCapture},
-    execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
-};
-use std::{
-    error::Error,
-    io,
-    time::{Duration, Instant},
-    path::Path,
-    env,
-};
-use app::{App, Dir};
-use std::sync::Arc;
-use tokio::sync::Mutex;
 
 async fn render_assignments(app: Arc<Mutex<App>>) -> Table<'static> {
     let app = app.lock().await;
-    let bold = Style::default().fg(Color::White).add_modifier(Modifier::BOLD);
-    let header_cells = ["Course", "Name", "Due Date"].iter().map(|h| Cell::from(*h));
-    let header = Row::new(header_cells)
-        .style(bold)
-        .height(1);
+    let bold = Style::default()
+        .fg(Color::White)
+        .add_modifier(Modifier::BOLD);
+    let header_cells = ["Course", "Name", "Due Date"]
+        .iter()
+        .map(|h| Cell::from(*h));
+    let header = Row::new(header_cells).style(bold).height(1);
     let rows = app.data.assignments.iter().map(|a| {
         let date = if let Some(date) = a.date {
             date.format("%A %d, %H:%M").to_string()
@@ -48,19 +50,23 @@ async fn render_assignments(app: Arc<Mutex<App>>) -> Table<'static> {
             format!("{}", date),
         ];
         let style = if a.completed {
-            Style::default().fg(Color::DarkGray).add_modifier(Modifier::CROSSED_OUT)
+            Style::default()
+                .fg(Color::DarkGray)
+                .add_modifier(Modifier::CROSSED_OUT)
         } else {
             Style::default()
         };
         Row::new(cells).style(style)
     });
-    let selected_style = Style::default().fg(Color::LightGreen).add_modifier(Modifier::BOLD);
+    let selected_style = Style::default()
+        .fg(Color::LightGreen)
+        .add_modifier(Modifier::BOLD);
     let table = Table::new(rows)
         .header(header)
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .title("Upcoming Assignments")
+                .title("Upcoming Assignments"),
         )
         .highlight_style(selected_style)
         .widths(&[
@@ -73,43 +79,36 @@ async fn render_assignments(app: Arc<Mutex<App>>) -> Table<'static> {
 
 async fn render_grades(app: Arc<Mutex<App>>) -> Table<'static> {
     let app = app.lock().await;
-    let bold = Style::default().fg(Color::White).add_modifier(Modifier::BOLD);
+    let bold = Style::default()
+        .fg(Color::White)
+        .add_modifier(Modifier::BOLD);
     let header_cells = ["Course", "Grade"].iter().map(|h| Cell::from(*h));
-    let header = Row::new(header_cells)
-        .style(bold)
-        .height(1);
+    let header = Row::new(header_cells).style(bold).height(1);
     let rows = app.data.grades.iter().map(|g| {
-        let cells = vec![
-            format!("{}", g.course),
-            format!("{}", g.grade),
-        ];
+        let cells = vec![format!("{}", g.course), format!("{}", g.grade)];
         Row::new(cells)
-        
     });
     let table = Table::new(rows)
         .header(header)
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .title("Grades")
-        )
-        .widths(&[
-            Constraint::Ratio(1, 2),
-            Constraint::Ratio(1, 2),
-        ]);
+        .block(Block::default().borders(Borders::ALL).title("Grades"))
+        .widths(&[Constraint::Ratio(1, 2), Constraint::Ratio(1, 2)]);
     return table;
 }
 
 async fn render_welcome(app: Arc<Mutex<App>>) -> Paragraph<'static> {
     let app = app.lock().await;
-    Paragraph::new(format!("\nToday is {}, there are {} upcoming assignments", chrono::Local::now().format("%A %d %B"), app.data.assignments.len()))
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .title("Welcome to CanvasTUI")
-        )
-        .alignment(Alignment::Center)
-        .wrap(Wrap { trim: true })
+    Paragraph::new(format!(
+        "\nToday is {}, there are {} upcoming assignments",
+        chrono::Local::now().format("%A %d %B"),
+        app.data.get_number_incomplete()
+    ))
+    .block(
+        Block::default()
+            .borders(Borders::ALL)
+            .title("Welcome to CanvasTUI"),
+    )
+    .alignment(Alignment::Center)
+    .wrap(Wrap { trim: true })
 }
 
 async fn render_summary(app: Arc<Mutex<App>>) -> Paragraph<'static> {
@@ -125,7 +124,7 @@ async fn render_summary(app: Arc<Mutex<App>>) -> Paragraph<'static> {
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .title("Assignment Summary")
+                .title("Assignment Summary"),
         )
         .alignment(Alignment::Left)
         .wrap(Wrap { trim: true })
@@ -146,7 +145,14 @@ async fn render_default<B: Backend>(terminal: &mut Terminal<B>, app: Arc<Mutex<A
 
         let left_chunks = Layout::default()
             .direction(Direction::Vertical)
-            .constraints([Constraint::Ratio(1, 10), Constraint::Ratio(6, 10), Constraint::Ratio(3, 10)].as_ref())
+            .constraints(
+                [
+                    Constraint::Ratio(1, 10),
+                    Constraint::Ratio(6, 10),
+                    Constraint::Ratio(3, 10),
+                ]
+                .as_ref(),
+            )
             .split(chunks[0]);
 
         let right_chunks = Layout::default()
@@ -164,11 +170,9 @@ async fn render_default<B: Backend>(terminal: &mut Terminal<B>, app: Arc<Mutex<A
         f.render_widget(summary, bottom_left_chunks[0]);
         f.render_widget(grades, right_chunks[0]);
     });
-
 }
 
-
-pub async fn run(data: Data, path: String) -> Result<(), Box<dyn Error>>{
+pub async fn run(data: Data, path: String) -> Result<(), Box<dyn Error>> {
     // Setup terminal
     enable_raw_mode()?;
     let mut stdout = io::stdout();
@@ -177,13 +181,13 @@ pub async fn run(data: Data, path: String) -> Result<(), Box<dyn Error>>{
     let mut terminal = Terminal::new(backend)?;
 
     // Create app and run it
-    let app = Arc::new(
-        Mutex::new(
-            App::new(data, path, Duration::from_millis(1000))
-            )
-        );
+    let app = Arc::new(Mutex::new(App::new(
+        data,
+        path,
+        Duration::from_millis(1000),
+    )));
 
-    // Initial refres
+    // Initial refresh
     app::refresh(app.clone()).await?;
 
     // Main loop and tick logic
@@ -192,7 +196,9 @@ pub async fn run(data: Data, path: String) -> Result<(), Box<dyn Error>>{
         render_default(&mut terminal, Arc::clone(&app)).await;
 
         // Non-blocking key detection
-        let timeout = app.lock().await
+        let timeout = app
+            .lock()
+            .await
             .tick_rate
             .checked_sub(last_tick.elapsed())
             .unwrap_or(Duration::from_secs(0));
@@ -206,7 +212,6 @@ pub async fn run(data: Data, path: String) -> Result<(), Box<dyn Error>>{
             last_tick = Instant::now();
         }
     }
-
 
     // Restore terminal
     disable_raw_mode()?;
@@ -229,8 +234,8 @@ async fn handle_input(app: Arc<Mutex<App>>) -> Result<bool, Box<dyn Error>> {
                 KeyCode::Char('q') => {
                     let app_lock = app.lock().await;
                     app_lock.data.serialize_to_file(&app_lock.path)?;
-                    return Ok(true)
-                },
+                    return Ok(true);
+                }
                 KeyCode::Char('o') => app.lock().await.open().await,
                 KeyCode::Char('r') => app::refresh(app).await?,
                 KeyCode::Char('d') => app.lock().await.mark_done(),
@@ -246,4 +251,3 @@ async fn handle_input(app: Arc<Mutex<App>>) -> Result<bool, Box<dyn Error>> {
     }
     Ok(false)
 }
-

@@ -26,6 +26,7 @@ async fn perform_queries(course_ids: &Vec<u32>) -> Result<Vec<get_grades::Respon
 
 async fn perform_query(variables: get_grades::Variables) -> Result<get_grades::ResponseData, Box<dyn Error>> {
     // this is the important line
+    let course_id = variables.course_id.clone();
     let request_body = GetGrades::build_query(variables);
     let api_token = std::env::var("CANVAS_API_TOKEN")?;
 
@@ -43,7 +44,7 @@ async fn perform_query(variables: get_grades::Variables) -> Result<get_grades::R
             Ok(data)
         }
         None => {
-            Err("No data found".into())
+            Err(format!("No data found for course ID: {}", course_id).into())
         }
     }
 }
@@ -53,7 +54,7 @@ fn parse_grades(responses: Vec<get_grades::ResponseData>) -> Result<Vec<Grade>, 
     for response in responses {
         if let Some(course) = response.course {
             // Iterate over assignments
-            for node in course.enrollments_connection.unwrap().nodes.unwrap() {
+            for node in course.enrollments_connection.ok_or("User is not enrolled")?.nodes.unwrap() {
                 if let Some(g) = node.unwrap().grades {
                     grades.push(
                         Grade::new(

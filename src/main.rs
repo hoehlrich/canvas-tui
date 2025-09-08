@@ -23,8 +23,9 @@ fn create_path(pathstr: &str) -> Result<(), Box<dyn Error>> {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    dotenv::dotenv().ok();
-    let path = std::env::var("HOME")? + "/.local/share/canvas-tui/data.json";
+    let directory = std::env::var("HOME")? + "/.local/share/canvas-tui/";
+    dotenv::from_filename(format!("{}/.env", directory))?;
+    let path = directory + "data.json";
     create_path(&path)?;
 
     let data = match Data::deserialize_from_file(&path) {
