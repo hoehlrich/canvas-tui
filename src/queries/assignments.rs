@@ -72,7 +72,7 @@ fn parse_assignments(responses: Vec<get_assignments::ResponseData>) -> Result<Ve
                     )?;
                 if let Some(due) = assignment.date {
                     // If assignment due within 14 days, add to list
-                    if due > now && due < now + chrono::Duration::days(14) {
+                    if due > now && due < now + chrono::Duration::days(21) {
                         assignments.push(assignment);
                     }
                 }

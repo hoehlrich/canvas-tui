@@ -1,7 +1,7 @@
 query GetAssignments($courseId: ID!) {
     course(id: $courseId) {
         name
-            assignmentsConnection {
+            assignmentsConnection(first: 1000) {
                 nodes {
                     name
                     description
