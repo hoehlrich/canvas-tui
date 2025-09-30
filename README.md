@@ -39,9 +39,16 @@ functional web frontend.
 - [X] Make # of upcoming assignments respect completed assignments
 - [X] Prevent scroll up down wraparound
 - [X] Fix issue: can only refresh when run using 'cargo r'
-- [ ] Refactor to not use graphql_client (reqwest only) (hopefully speed up)
-- [ ] Errors pop up in box instead of randomly printing
-- [ ] Manually hiding assignments (that are in class) (maybe grey but not crossed out)
+- [X] Refactor to not use graphql_client (didn't do because serialization would be a pain in the ass)
+- [X] Errors pop up in box instead of randomly printing
+- [X] Remove whitespace
+- [X] Make highlight color yellow when editing
+- [X] Be able to delete assignments (only the custom ones) by pressing 'x'
+- [X] Be able to type capital letters and shift tab in new assignment mode
+- [X] Be able to create custom assignemtns by pressing 'n'
+- [ ] Indicate which field is selected when creating writing custom assignments
+- [ ] Be able to change the day with j and k when editing the DueDate field (don't allow it to go before today)
+- [ ] Add timer column and let it be resetable and pausable
 - [ ] Canvas assignment link scraping
 - [ ] Course ID config
 - [ ] Query Course IDs if no config
@@ -50,3 +57,4 @@ functional web frontend.
 - [ ] Fix abhorrent load times for grades
 - [ ] Fetch external submission links
 - [ ] If browser is opened with open::this(url) for the first time, allow the browser to remain open after the program exits
+- [ ] **Migrate to the maintained ratatui**

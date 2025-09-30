@@ -1,9 +1,10 @@
 mod app;
 
+use app::Mode;
 use crate::types::data::Data;
 use app::{App, Dir};
 use crossterm::{
-    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyModifiers},
+    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyEvent, KeyCode, KeyModifiers},
     execute,
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
@@ -58,9 +59,10 @@ async fn render_assignments(app: Arc<Mutex<App>>) -> Table<'static> {
         };
         Row::new(cells).style(style)
     });
-    let selected_style = Style::default()
-        .fg(Color::LightGreen)
-        .add_modifier(Modifier::BOLD);
+    let selected_style = match app.mode {
+        Mode::Normal => Style::default().fg(Color::LightGreen).add_modifier(Modifier::BOLD),
+        Mode::NewAssignment(_) => Style::default().fg(Color::LightYellow).add_modifier(Modifier::BOLD),
+    };
     let table = Table::new(rows)
         .header(header)
         .block(
@@ -139,11 +141,6 @@ async fn render_default<B: Backend>(terminal: &mut Terminal<B>, app: Arc<Mutex<A
 
     let _ = terminal.draw(|f| {
         let chunks = Layout::default()
-            .direction(Direction::Horizontal)
-            .constraints([Constraint::Ratio(2, 3), Constraint::Ratio(1, 3)].as_ref())
-            .split(f.size());
-
-        let left_chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints(
                 [
@@ -153,24 +150,20 @@ async fn render_default<B: Backend>(terminal: &mut Terminal<B>, app: Arc<Mutex<A
                 ]
                 .as_ref(),
             )
-            .split(chunks[0]);
+            .split(f.size());
 
-        let right_chunks = Layout::default()
-            .direction(Direction::Vertical)
-            .constraints([Constraint::Ratio(3, 10), Constraint::Ratio(7, 10)].as_ref())
-            .split(chunks[1]);
-
-        let bottom_left_chunks = Layout::default()
+        let bottom_chunks = Layout::default()
             .direction(Direction::Horizontal)
             .constraints([Constraint::Ratio(1, 2), Constraint::Ratio(1, 2)].as_ref())
-            .split(left_chunks[2]);
+            .split(chunks[2]);
 
-        f.render_widget(welcome, left_chunks[0]);
-        f.render_stateful_widget(assignments, left_chunks[1], &mut assignments_state);
-        f.render_widget(summary, bottom_left_chunks[0]);
-        f.render_widget(grades, right_chunks[0]);
+        f.render_widget(welcome, chunks[0]);
+        f.render_stateful_widget(assignments, chunks[1], &mut assignments_state);
+        f.render_widget(summary, bottom_chunks[0]);
+        f.render_widget(grades, bottom_chunks[1]);
     });
 }
+
 
 pub async fn run(data: Data, path: String) -> Result<(), Box<dyn Error>> {
     // Setup terminal
@@ -227,27 +220,59 @@ pub async fn run(data: Data, path: String) -> Result<(), Box<dyn Error>> {
 
 async fn handle_input(app: Arc<Mutex<App>>) -> Result<bool, Box<dyn Error>> {
     if let Event::Key(key) = event::read()? {
-        match key.modifiers {
-            KeyModifiers::NONE => match key.code {
-                KeyCode::Char('j') => app.lock().await.mv(Dir::Down),
-                KeyCode::Char('k') => app.lock().await.mv(Dir::Up),
-                KeyCode::Char('q') => {
-                    let app_lock = app.lock().await;
-                    app_lock.data.serialize_to_file(&app_lock.path)?;
-                    return Ok(true);
-                }
-                KeyCode::Char('o') => app.lock().await.open().await,
-                KeyCode::Char('r') => app::refresh(app).await?,
-                KeyCode::Char('d') => app.lock().await.mark_done(),
-                KeyCode::Enter => app.lock().await.enter(),
-                KeyCode::Esc => app.lock().await.esc(),
-                _ => (),
-            },
-            KeyModifiers::CONTROL => match key.code {
-                _ => (),
-            },
-            _ => (),
+        let mode = app.lock().await.mode.clone();
+        match mode {
+            Mode::Normal => handle_input_normal(app.clone(), key).await,
+            Mode::NewAssignment(_) => handle_input_new_assignment(app.clone(), key).await,
         }
+    } else {
+        Ok(false)
+    }
+}
+
+async fn handle_input_normal(app: Arc<Mutex<App>>, key: KeyEvent) -> Result<bool, Box<dyn Error>> {
+    match key.modifiers {
+        KeyModifiers::NONE => match key.code {
+            KeyCode::Char('j') => app.lock().await.mv(Dir::Down),
+            KeyCode::Char('k') => app.lock().await.mv(Dir::Up),
+            KeyCode::Char('q') => {
+                app.lock().await.quit()?;
+                return Ok(true);
+            }
+            KeyCode::Char('o') => app.lock().await.open().await,
+            KeyCode::Char('n') => app.lock().await.new_assignment().await?,
+            KeyCode::Char('r') => app::refresh(app).await?,
+            KeyCode::Char('d') => app.lock().await.mark_done(),
+            KeyCode::Char('x') => app.lock().await.delete_assignment().await,
+            KeyCode::Enter => app.lock().await.enter(),
+            KeyCode::Esc => app.lock().await.esc(),
+            _ => (),
+        },
+        KeyModifiers::CONTROL => match key.code {
+            KeyCode::Char('c') => {
+                app.lock().await.quit()?;
+                return Ok(true);
+            }
+            _ => (),
+        },
+        _ => (),
     }
     Ok(false)
 }
+
+async fn handle_input_new_assignment(app: Arc<Mutex<App>>, key: KeyEvent) -> Result<bool, Box<dyn Error>> {
+    match key.modifiers {
+        KeyModifiers::NONE => match key.code {
+            KeyCode::Esc => app.lock().await.exit_new_assignment_mode().await,
+            _ => app.lock().await.take_new_assignment_input(key).await,
+        }
+        KeyModifiers::SHIFT => app.lock().await.take_new_assignment_input(key).await,
+        KeyModifiers::CONTROL => match key.code {
+            KeyCode::Char('c') => app.lock().await.exit_new_assignment_mode().await,
+            _ => (),
+        }
+        _ => (),
+    };
+    Ok(false)
+}
+

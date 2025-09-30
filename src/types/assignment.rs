@@ -1,9 +1,9 @@
 use crate::types::link::Link;
-use chrono::{DateTime, FixedOffset};
+use chrono::{DateTime, FixedOffset, TimeZone};
 use serde::{Deserialize, Serialize};
 use std::error::Error;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct Assignment {
     pub name: String,
     pub description: Option<String>,
@@ -11,6 +11,7 @@ pub struct Assignment {
     pub date: Option<DateTime<FixedOffset>>,
     pub course: String,
     pub completed: bool,
+    pub custom: bool,
 }
 
 impl Assignment {
@@ -42,7 +43,28 @@ impl Assignment {
             date,
             course,
             completed,
+            custom: false,
         })
+    }
+
+    pub fn empty() -> Self {
+        let today = chrono::Local::now().date_naive();
+        let time = chrono::NaiveTime::from_hms_opt(23, 59, 0).unwrap();
+        let naive_dt = today.and_time(time);
+        let now = chrono::Local::now();
+        let offset = now.offset();
+        let dt: chrono::DateTime<FixedOffset> = offset.from_local_datetime(&naive_dt).unwrap();
+        
+
+        Self {
+            name: String::new(),
+            description: None,
+            html_url: String::new(),
+            date: Some(dt),
+            course: String::new(),
+            completed: false,
+            custom: true,
+        }
     }
 }
 

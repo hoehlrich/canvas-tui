@@ -1,3 +1,4 @@
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use tui::{
     style::{Color, Modifier, Style},
     widgets::{ListState, TableState},
@@ -6,7 +7,7 @@ use tokio::sync::Mutex;
 use std::time::Duration;
 use std::sync::Arc;
 use std::error::Error;
-use crate::types::data::Data;
+use crate::types::{assignment::Assignment, data::Data};
 
 pub enum Dir {
     Up,
@@ -18,6 +19,20 @@ pub enum Widget {
     Assignments,
 }
 
+#[derive(PartialEq, Eq, Copy, Clone)]
+pub enum AssignmentField {
+    Course,
+    Name,
+    DueDate,
+}
+
+
+#[derive(PartialEq, Eq, Copy, Clone)]
+pub enum Mode {
+    Normal,
+    NewAssignment(AssignmentField),
+}
+
 pub struct App {
     pub path: String,
     pub tick_rate: Duration,
@@ -25,6 +40,7 @@ pub struct App {
     pub links_state: ListState,
     pub data: Data,
     pub active_widget: Widget,
+    pub mode: Mode,
 }
 
 impl App {
@@ -36,6 +52,97 @@ impl App {
             links_state: ListState::default(),
             data,
             active_widget: Widget::Assignments,
+            mode: Mode::Normal,
+        }
+    }
+
+    pub async fn new_assignment(&mut self) -> Result<(), Box<dyn Error>> {
+        self.mode = Mode::NewAssignment(AssignmentField::Course);
+        match self.mode {
+            Mode::Normal => return Err("Cannot create new assignment in normal mode.".into()),
+            Mode::NewAssignment(_) => {
+                self.data.assignments.insert(0, Assignment::empty());
+                self.assignments_state.select(Some(0));
+            }
+        }
+
+        Ok(())
+    }
+
+    pub async fn take_new_assignment_input(&mut self, key: KeyEvent) {
+        let assignment = match self.assignments_state.selected() {
+            Some(i) => &mut self.data.assignments[i],
+            None => unreachable!(),
+        };
+
+        let field = match self.mode {
+            Mode::Normal => unreachable!(),
+            Mode::NewAssignment(field) => field,
+        };
+
+        let mut text = match field {
+            AssignmentField::Course => assignment.course.clone(),
+            AssignmentField::Name => assignment.name.clone(),
+            // TODO: maybe make due date start at the current day and change up and down a day when the user presses j and k
+            AssignmentField::DueDate => String::new(), 
+        };
+
+        match key.modifiers {
+            KeyModifiers::NONE => match key.code {
+                KeyCode::Backspace => {text.pop();},
+                KeyCode::Tab => {
+                    let new_field = match field {
+                        AssignmentField::Course => AssignmentField::Name,
+                        AssignmentField::Name => AssignmentField::DueDate,
+                        AssignmentField::DueDate => AssignmentField::DueDate,
+                    };
+                    self.mode = Mode::NewAssignment(new_field);
+                }
+                KeyCode::Char(c) => text.push(c),
+                _ => (),
+            },
+            KeyModifiers::SHIFT => match key.code {
+                KeyCode::BackTab => {
+                    let new_field = match field {
+                        AssignmentField::Course => AssignmentField::Course,
+                        AssignmentField::Name => AssignmentField::Course,
+                        AssignmentField::DueDate => AssignmentField::Name,
+                    };
+                    self.mode = Mode::NewAssignment(new_field);
+                }
+                KeyCode::Char(c) => text.push(c),
+                _ => (),
+            },
+            _ => (),
+        }
+
+        match field {
+            AssignmentField::Course => assignment.course = text,
+            AssignmentField::Name => assignment.name = text,
+            AssignmentField::DueDate => (),
+        }
+
+
+    }
+
+    pub async fn exit_new_assignment_mode(&mut self) {
+        self.mode = Mode::Normal;
+        self.data.sort_assignments();
+    }
+
+    pub async fn delete_assignment(&mut self) {
+        if let Some(i) = self.assignments_state.selected() {
+            // Do nothing if the assignment is not user-created
+            if !self.data.assignments[i].custom {
+                return;
+            }
+
+            self.data.assignments.remove(i);
+            if self.data.assignments.len() == 0 {
+                self.assignments_state.select(None);
+            } else if self.data.assignments.len() <= i {
+                self.assignments_state.select(Some(i - 1));
+            }
         }
     }
 
@@ -105,6 +212,10 @@ impl App {
         } else if self.data.assignments.len() > 0 {
             self.assignments_state.select(Some(0));
         }
+    }
+
+    pub fn quit(&self) -> Result<(), Box<dyn Error>> {
+        self.data.serialize_to_file(&self.path)
     }
 
     pub fn on_tick(&mut self) {

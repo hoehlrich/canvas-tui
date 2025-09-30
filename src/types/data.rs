@@ -46,6 +46,10 @@ impl Data {
         });
     }
 
+    pub fn sort_assignments(&mut self) {
+        self.assignments.sort_by(|a, b| a.date.cmp(&b.date));
+    }
+
     pub fn update_assignments(&mut self, assignments: Vec<Assignment>) {
         for assignment in assignments {
             if let Some(a) = self.assignments.iter_mut().find(|a| a.html_url == assignment.html_url) {
@@ -54,7 +58,7 @@ impl Data {
                 self.assignments.push(assignment);
             }
         }
-        self.assignments.sort_by(|a, b| a.date.cmp(&b.date));
+        self.sort_assignments();
     }
 
     pub fn get_number_incomplete(&self) -> usize {
