@@ -46,6 +46,7 @@ functional web frontend.
 - [X] Be able to delete assignments (only the custom ones) by pressing 'x'
 - [X] Be able to type capital letters and shift tab in new assignment mode
 - [X] Be able to create custom assignemtns by pressing 'n'
+- [ ] Don't overwrite user set completion status
 - [ ] Indicate which field is selected when creating writing custom assignments
 - [ ] Be able to change the day with j and k when editing the DueDate field (don't allow it to go before today)
 - [ ] Add timer column and let it be resetable and pausable

@@ -165,6 +165,7 @@ impl App {
                 if let Some(a) = self.assignments_state.selected() {
                     let assignment = &mut self.data.assignments[a];
                     assignment.completed = !assignment.completed;
+                    assignment.modified = true;
                 }
             }
         }

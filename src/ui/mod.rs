@@ -101,7 +101,7 @@ async fn render_welcome(app: Arc<Mutex<App>>) -> Paragraph<'static> {
     let app = app.lock().await;
     Paragraph::new(format!(
         "\nToday is {}, there are {} upcoming assignments",
-        chrono::Local::now().format("%A %d %B"),
+        chrono::Local::now().format("%A %B %-d"),
         app.data.get_number_incomplete()
     ))
     .block(

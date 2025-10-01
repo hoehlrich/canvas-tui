@@ -12,6 +12,7 @@ pub struct Assignment {
     pub course: String,
     pub completed: bool,
     pub custom: bool,
+    pub modified: bool,
 }
 
 impl Assignment {
@@ -44,6 +45,7 @@ impl Assignment {
             course,
             completed,
             custom: false,
+            modified: false,
         })
     }
 
@@ -64,6 +66,7 @@ impl Assignment {
             course: String::new(),
             completed: false,
             custom: true,
+            modified: false,
         }
     }
 }

@@ -53,7 +53,9 @@ impl Data {
     pub fn update_assignments(&mut self, assignments: Vec<Assignment>) {
         for assignment in assignments {
             if let Some(a) = self.assignments.iter_mut().find(|a| a.html_url == assignment.html_url) {
-                a.completed |= assignment.completed;
+                if !a.modified {
+                    a.completed |= assignment.completed;
+                }
             } else {
                 self.assignments.push(assignment);
             }
