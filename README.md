@@ -17,7 +17,24 @@ properties.
 
 Currently data storage is only supported on *nix systems (stored in ~/.local/share/canvas-tui/).
 
-NOTE: course-ids are current hard coded so it will not automatically link to courses from your API key
+NOTE: course-ids are defined in ~/.local/share/canvas-tui/data.json
+
+### Keybidings
+
+```
+j -> move selection down
+k -> move selection up
+d -> toggle competion status of selected assignment
+o -> open assignment url in browser
+q -> quit
+r -> force refresh
+n -> enter new assignment mode
+    a-z -> fill out text field
+    tab -> go to next field
+    esc/C-c > exit new assignment mode
+    j/k -> when due date selected decrement/increment date
+x -> delete custom assignment
+```
 
 ### Background
 
@@ -50,14 +67,18 @@ functional web frontend.
 - [X] Indicate which field is selected when creating writing custom assignments
 - [x] Be able to change the day with j and k when editing the DueDate field (don't allow it to go before today)
 - [X] Add a lock symbol to locked assignments
-- [ ] Add timer column and let it be resetable and pausable (maybe)
+- [X] Update logic for locked assignments that become unlocked
+- [X] Grade fetching doesn't work (figured it out: use REST)
+- [ ] Rework assignment query to use REST instead of graphql
 - [ ] Canvas assignment link scraping
+- [ ] Reinstate links pane
+- [ ] Download pdf files and open in zathura (maybe)
+- [ ] Add timer column and let it be resetable and pausable (maybe)
 - [ ] Course ID config
 - [ ] Query Course IDs if no config (maybe)
 - [ ] ISSUE: read write precedence with multiple instances working on the same data
 - [ ] Filter assignments by course (new pane idea??)
-- [ ] custom DIR for data files
-- [ ] Fix abhorrent load times for grades
+- [ ] Custom DIR for data files
 - [ ] Fetch external submission links
 - [ ] If browser is opened with open::this(url) for the first time, allow the browser to remain open after the program exits
 - [ ] **Migrate to the maintained ratatui**

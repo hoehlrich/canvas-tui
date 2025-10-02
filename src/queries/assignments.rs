@@ -1,5 +1,5 @@
 use crate::types::assignment::Assignment;
-use crate::queries::API_URL;
+use crate::queries::GRAPHQL_URL;
 
 use graphql_client::{GraphQLQuery, Response};
 use reqwest;
@@ -34,7 +34,7 @@ async fn perform_query(variables: get_assignments::Variables) -> Result<get_assi
 
     let client = reqwest::Client::new();
     let res = client
-        .post(API_URL)
+        .post(GRAPHQL_URL)
         .bearer_auth(api_token)
         .json(&request_body)
         .send()

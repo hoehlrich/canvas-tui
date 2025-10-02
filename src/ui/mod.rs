@@ -54,7 +54,7 @@ async fn render_assignments(app: Arc<Mutex<App>>) -> Table<'static> {
     let header = Row::new(header_cells).style(bold).height(1);
     let rows = app.data.assignments.iter().map(|a| {
         let date = if let Some(date) = a.date {
-            date.format("%A %d, %H:%M").to_string()
+            date.format("%A %-d, %H:%M").to_string()
         } else {
             "(No due date)".to_string()
         };
