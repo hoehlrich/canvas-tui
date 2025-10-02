@@ -1,8 +1,4 @@
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use tui::{
-    style::{Color, Modifier, Style},
-    widgets::{ListState, TableState},
-};
+use tui::widgets::TableState;
 use tokio::sync::Mutex;
 use std::time::Duration;
 use std::sync::Arc;
@@ -37,7 +33,6 @@ pub struct App {
     pub path: String,
     pub tick_rate: Duration,
     pub assignments_state: TableState,
-    pub links_state: ListState,
     pub data: Data,
     pub active_widget: Widget,
     pub mode: Mode,
@@ -49,7 +44,6 @@ impl App {
             path,
             tick_rate,
             assignments_state: TableState::default(),
-            links_state: ListState::default(),
             data,
             active_widget: Widget::Assignments,
             mode: Mode::Normal,
@@ -67,72 +61,6 @@ impl App {
         }
 
         Ok(())
-    }
-
-    pub async fn take_new_assignment_input(&mut self, key: KeyEvent) {
-        let assignment = match self.assignments_state.selected() {
-            Some(i) => &mut self.data.assignments[i],
-            None => unreachable!(),
-        };
-
-        let field = match self.mode {
-            Mode::Normal => unreachable!(),
-            Mode::NewAssignment(field) => field,
-        };
-
-        // Handle the DueDate case
-        if field == AssignmentField::DueDate {
-            match key.code {
-                KeyCode::Char('j') => assignment.decrement_due_date(),
-                KeyCode::Char('k') => assignment.increment_due_date(),
-                _ => (),
-            }
-            return;
-        }
-
-        let mut text = match field {
-            AssignmentField::Course => assignment.course.clone(),
-            AssignmentField::Name => assignment.name.clone(),
-            // TODO: maybe make due date start at the current day and change up and down a day when the user presses j and k
-            AssignmentField::DueDate => unreachable!(), 
-        };
-
-        match key.modifiers {
-            KeyModifiers::NONE => match key.code {
-                KeyCode::Backspace => {text.pop();},
-                KeyCode::Tab => {
-                    let new_field = match field {
-                        AssignmentField::Course => AssignmentField::Name,
-                        AssignmentField::Name => AssignmentField::DueDate,
-                        AssignmentField::DueDate => AssignmentField::DueDate,
-                    };
-                    self.mode = Mode::NewAssignment(new_field);
-                }
-                KeyCode::Char(c) => text.push(c),
-                _ => (),
-            },
-            KeyModifiers::SHIFT => match key.code {
-                KeyCode::BackTab => {
-                    let new_field = match field {
-                        AssignmentField::Course => AssignmentField::Course,
-                        AssignmentField::Name => AssignmentField::Course,
-                        AssignmentField::DueDate => AssignmentField::Name,
-                    };
-                    self.mode = Mode::NewAssignment(new_field);
-                }
-                KeyCode::Char(c) => text.push(c),
-                _ => (),
-            },
-            _ => (),
-        }
-
-        match field {
-            AssignmentField::Course => assignment.course = text,
-            AssignmentField::Name => assignment.name = text,
-            AssignmentField::DueDate => (),
-        }
-
-
     }
 
     pub async fn exit_new_assignment_mode(&mut self) {

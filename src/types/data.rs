@@ -1,4 +1,4 @@
-use std::{error::Error, ops::Not};
+use std::error::Error;
 use crate::types::assignment::Assignment;
 use crate::types::grade::Grade;
 use serde::{Deserialize, Serialize};
@@ -17,22 +17,6 @@ impl Data {
             grades: Vec::new(),
             course_ids: Vec::new(),
         }
-    }
-
-    pub async fn from_course_ids(course_ids: Vec<u32>, debug: bool) -> Result<Self, Box<dyn Error>> {
-        if debug {
-            println!("Fetching assignments...");
-        }
-        let assignments = crate::queries::assignments::query_assignments(&course_ids).await?;
-        if debug {
-            println!("Fetched {} assignments", assignments.len());
-            println!("Fetching grades...");
-        }
-        let grades = crate::queries::grades::query_grades(&course_ids).await?;
-        if debug {
-            println!("Fetched {} grades", grades.len());
-        }
-        Ok(Self { assignments, grades, course_ids})
     }
 
     pub fn remove_past_assignments(&mut self) {

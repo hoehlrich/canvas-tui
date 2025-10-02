@@ -1,4 +1,3 @@
-use crate::types::link::Link;
 use chrono::{DateTime, Duration, FixedOffset, TimeZone};
 use serde::{Deserialize, Serialize};
 use std::error::Error;

@@ -1,30 +1,28 @@
 mod app;
+mod input;
 
 use crate::types::data::Data;
-use app::{App, Dir, Mode, AssignmentField};
+use self::input::handle_input;
+use app::{App, Mode, AssignmentField};
 use crossterm::{
-    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyEvent, KeyCode, KeyModifiers},
+    event::{self, DisableMouseCapture, EnableMouseCapture},
     execute,
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
 use std::sync::Arc;
 use std::{
-    env,
     error::Error,
     io,
-    path::Path,
     time::{Duration, Instant},
 };
 use tokio::sync::Mutex;
 use tui::{
-    Frame, Terminal,
+    Terminal,
     backend::{Backend, CrosstermBackend},
-    layout::{Alignment, Constraint, Direction, Layout, Rect},
+    layout::{Alignment, Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
-    symbols,
-    text::Span,
     widgets::{
-        Axis, Block, Borders, Cell, Chart, Dataset, GraphType, List, ListItem, Paragraph, Row,
+        Block, Borders, Cell, Paragraph, Row,
         Table, Wrap,
     },
 };
@@ -182,7 +180,6 @@ async fn render_default<B: Backend>(terminal: &mut Terminal<B>, app: Arc<Mutex<A
     });
 }
 
-
 pub async fn run(data: Data, path: String) -> Result<(), Box<dyn Error>> {
     // Setup terminal
     enable_raw_mode()?;
@@ -236,61 +233,4 @@ pub async fn run(data: Data, path: String) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-async fn handle_input(app: Arc<Mutex<App>>) -> Result<bool, Box<dyn Error>> {
-    if let Event::Key(key) = event::read()? {
-        let mode = app.lock().await.mode.clone();
-        match mode {
-            Mode::Normal => handle_input_normal(app.clone(), key).await,
-            Mode::NewAssignment(_) => handle_input_new_assignment(app.clone(), key).await,
-        }
-    } else {
-        Ok(false)
-    }
-}
-
-async fn handle_input_normal(app: Arc<Mutex<App>>, key: KeyEvent) -> Result<bool, Box<dyn Error>> {
-    match key.modifiers {
-        KeyModifiers::NONE => match key.code {
-            KeyCode::Char('j') => app.lock().await.mv(Dir::Down),
-            KeyCode::Char('k') => app.lock().await.mv(Dir::Up),
-            KeyCode::Char('q') => {
-                app.lock().await.quit()?;
-                return Ok(true);
-            }
-            KeyCode::Char('o') => app.lock().await.open().await,
-            KeyCode::Char('n') => app.lock().await.new_assignment().await?,
-            KeyCode::Char('r') => app::refresh(app).await?,
-            KeyCode::Char('d') => app.lock().await.mark_done(),
-            KeyCode::Char('x') => app.lock().await.delete_assignment().await,
-            KeyCode::Enter => app.lock().await.enter(),
-            KeyCode::Esc => app.lock().await.esc(),
-            _ => (),
-        },
-        KeyModifiers::CONTROL => match key.code {
-            KeyCode::Char('c') => {
-                app.lock().await.quit()?;
-                return Ok(true);
-            }
-            _ => (),
-        },
-        _ => (),
-    }
-    Ok(false)
-}
-
-async fn handle_input_new_assignment(app: Arc<Mutex<App>>, key: KeyEvent) -> Result<bool, Box<dyn Error>> {
-    match key.modifiers {
-        KeyModifiers::NONE => match key.code {
-            KeyCode::Esc => app.lock().await.exit_new_assignment_mode().await,
-            _ => app.lock().await.take_new_assignment_input(key).await,
-        }
-        KeyModifiers::SHIFT => app.lock().await.take_new_assignment_input(key).await,
-        KeyModifiers::CONTROL => match key.code {
-            KeyCode::Char('c') => app.lock().await.exit_new_assignment_mode().await,
-            _ => (),
-        }
-        _ => (),
-    };
-    Ok(false)
-}
 
