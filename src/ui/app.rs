@@ -80,11 +80,21 @@ impl App {
             Mode::NewAssignment(field) => field,
         };
 
+        // Handle the DueDate case
+        if field == AssignmentField::DueDate {
+            match key.code {
+                KeyCode::Char('j') => assignment.decrement_due_date(),
+                KeyCode::Char('k') => assignment.increment_due_date(),
+                _ => (),
+            }
+            return;
+        }
+
         let mut text = match field {
             AssignmentField::Course => assignment.course.clone(),
             AssignmentField::Name => assignment.name.clone(),
             // TODO: maybe make due date start at the current day and change up and down a day when the user presses j and k
-            AssignmentField::DueDate => String::new(), 
+            AssignmentField::DueDate => unreachable!(), 
         };
 
         match key.modifiers {

@@ -1,8 +1,7 @@
 mod app;
 
-use app::Mode;
 use crate::types::data::Data;
-use app::{App, Dir};
+use app::{App, Dir, Mode, AssignmentField};
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyEvent, KeyCode, KeyModifiers},
     execute,
@@ -35,9 +34,23 @@ async fn render_assignments(app: Arc<Mutex<App>>) -> Table<'static> {
     let bold = Style::default()
         .fg(Color::White)
         .add_modifier(Modifier::BOLD);
-    let header_cells = ["Course", "Name", "Due Date"]
+    let mut header_cells: Vec<Cell> = ["Course", "Name", "Due Date"]
         .iter()
-        .map(|h| Cell::from(*h));
+        .map(|h| Cell::from(*h))
+        .collect();
+
+    // If creating a new assignment highlight the property being modified
+    match app.mode {
+        Mode::NewAssignment(field) => {
+            match field {
+                AssignmentField::Course => header_cells[0] = Cell::from("Course").style(Style::default().fg(Color::LightYellow)),
+                AssignmentField::Name => header_cells[1] = Cell::from("Name").style(Style::default().fg(Color::LightYellow)),
+                AssignmentField::DueDate => header_cells[2] = Cell::from("Due Date").style(Style::default().fg(Color::LightYellow)),
+            }
+        },
+        _ => (),
+    }
+
     let header = Row::new(header_cells).style(bold).height(1);
     let rows = app.data.assignments.iter().map(|a| {
         let date = if let Some(date) = a.date {

@@ -46,13 +46,14 @@ functional web frontend.
 - [X] Be able to delete assignments (only the custom ones) by pressing 'x'
 - [X] Be able to type capital letters and shift tab in new assignment mode
 - [X] Be able to create custom assignemtns by pressing 'n'
-- [ ] Don't overwrite user set completion status
-- [ ] Indicate which field is selected when creating writing custom assignments
-- [ ] Be able to change the day with j and k when editing the DueDate field (don't allow it to go before today)
-- [ ] Add timer column and let it be resetable and pausable
+- [x] Don't overwrite user set completion status
+- [X] Indicate which field is selected when creating writing custom assignments
+- [x] Be able to change the day with j and k when editing the DueDate field (don't allow it to go before today)
+- [ ] Add timer column and let it be resetable and pausable (maybe)
 - [ ] Canvas assignment link scraping
 - [ ] Course ID config
-- [ ] Query Course IDs if no config
+- [ ] Query Course IDs if no config (maybe)
+- [ ] ISSUE: read write precedence with multiple instances working on the same data
 - [ ] Filter assignments by course (new pane idea??)
 - [ ] custom DIR for data files
 - [ ] Fix abhorrent load times for grades

@@ -1,5 +1,5 @@
 use crate::types::link::Link;
-use chrono::{DateTime, FixedOffset, TimeZone};
+use chrono::{DateTime, Duration, FixedOffset, TimeZone};
 use serde::{Deserialize, Serialize};
 use std::error::Error;
 
@@ -69,6 +69,29 @@ impl Assignment {
             modified: false,
         }
     }
+
+    // Make the due date one day later
+    pub fn increment_due_date(&mut self) {
+
+        match self.date {
+            Some(dt) => self.date = Some(dt + Duration::days(1)),
+            None => return,
+        }
+    }
+
+    // Make the due date one day earlier (bounded by today)
+    pub fn decrement_due_date(&mut self) {
+        match self.date {
+            Some(dt) => {
+                let new_dt = dt - Duration::days(1);
+                if new_dt > chrono::Local::now() {
+                    self.date = Some(dt - Duration::days(1));
+                }
+            },
+            None => return,
+        }
+    }
+
 }
 
 impl std::fmt::Display for Assignment {
