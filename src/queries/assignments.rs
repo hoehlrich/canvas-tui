@@ -68,7 +68,8 @@ fn parse_assignments(responses: Vec<get_assignments::ResponseData>) -> Result<Ve
                         a.html_url.clone().unwrap(),
                         a.due_at,
                         course.name.clone(),
-                        completed
+                        completed,
+                        a.lock_info.unwrap().is_locked
                     )?;
                 if let Some(due) = assignment.date {
                     // If assignment due within 14 days, add to list

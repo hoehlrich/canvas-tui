@@ -49,6 +49,7 @@ functional web frontend.
 - [x] Don't overwrite user set completion status
 - [X] Indicate which field is selected when creating writing custom assignments
 - [x] Be able to change the day with j and k when editing the DueDate field (don't allow it to go before today)
+- [X] Add a lock symbol to locked assignments
 - [ ] Add timer column and let it be resetable and pausable (maybe)
 - [ ] Canvas assignment link scraping
 - [ ] Course ID config

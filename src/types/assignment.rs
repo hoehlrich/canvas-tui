@@ -13,6 +13,7 @@ pub struct Assignment {
     pub completed: bool,
     pub custom: bool,
     pub modified: bool,
+    pub locked: bool,
 }
 
 impl Assignment {
@@ -24,6 +25,7 @@ impl Assignment {
         datestring: Option<String>,
         course: String,
         completed: bool,
+        locked: bool,
     ) -> Result<Self, Box<dyn Error>> {
         let course = if let Some(nickname) = nickname {
             nickname
@@ -46,6 +48,7 @@ impl Assignment {
             completed,
             custom: false,
             modified: false,
+            locked,
         })
     }
 
@@ -67,6 +70,7 @@ impl Assignment {
             completed: false,
             custom: true,
             modified: false,
+            locked: false,
         }
     }
 

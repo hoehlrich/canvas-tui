@@ -58,9 +58,14 @@ async fn render_assignments(app: Arc<Mutex<App>>) -> Table<'static> {
         } else {
             "(No due date)".to_string()
         };
+        let name = if a.locked {
+            format!("🔒{}", a.name)
+        } else {
+            a.name.clone()
+        };
         let cells = vec![
             format!("{}", a.course),
-            format!("{}", a.name),
+            name,
             format!("{}", date),
         ];
         let style = if a.completed {
