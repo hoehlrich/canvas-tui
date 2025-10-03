@@ -38,7 +38,7 @@ x -> delete custom assignment
 
 ### Background
 
-This project originated as a BlasterHacks 2025 project [canvas.lte](https://github.com/hoehlrich/canvas-tui)
+This project originated as a BlasterHacks 2025 project [canvas.lte](https://github.com/shauryasaxenas/Canvas.LTE_demo)
 programmed in conjunction with [shauryasaxenas](https://github.com/shauryasaxenas). This fork is an attempt to
 remedy the various issues with the original project in a smaller scope: just
 the Canvas API and TUI (removed web frontend and groq integration). Ideally,
@@ -69,9 +69,10 @@ functional web frontend.
 - [X] Add a lock symbol to locked assignments
 - [X] Update logic for locked assignments that become unlocked
 - [X] Grade fetching doesn't work (figured it out: use REST)
+- [X] Canvas assignment link scraping
+- [X] Reinstate links pane
+- [ ] Be able to open links in the link pane
 - [ ] Rework assignment query to use REST instead of graphql
-- [ ] Canvas assignment link scraping
-- [ ] Reinstate links pane
 - [ ] Download pdf files and open in zathura (maybe)
 - [ ] Add timer column and let it be resetable and pausable (maybe)
 - [ ] Course ID config

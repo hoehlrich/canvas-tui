@@ -1,4 +1,4 @@
-use tui::widgets::TableState;
+use ratatui::widgets::{ListState, TableState};
 use tokio::sync::Mutex;
 use std::time::Duration;
 use std::sync::Arc;
@@ -33,6 +33,7 @@ pub struct App {
     pub path: String,
     pub tick_rate: Duration,
     pub assignments_state: TableState,
+    pub links_state: ListState,
     pub data: Data,
     pub active_widget: Widget,
     pub mode: Mode,
@@ -44,6 +45,7 @@ impl App {
             path,
             tick_rate,
             assignments_state: TableState::default(),
+            links_state: ListState::default(),
             data,
             active_widget: Widget::Assignments,
             mode: Mode::Normal,

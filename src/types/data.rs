@@ -39,8 +39,10 @@ impl Data {
             if let Some(a) = self.assignments.iter_mut().find(|a| a.html_url == assignment.html_url) {
                 if !a.modified {
                     a.completed |= assignment.completed;
-                    a.locked = assignment.locked;
                 }
+                a.locked = assignment.locked;
+                a.description = assignment.description;
+                a.populate_links();
             } else {
                 self.assignments.push(assignment);
             }

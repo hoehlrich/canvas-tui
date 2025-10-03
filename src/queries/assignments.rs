@@ -1,5 +1,5 @@
-use crate::types::assignment::Assignment;
 use crate::queries::GRAPHQL_URL;
+use crate::types::{assignment::Assignment, link::Link};
 
 use graphql_client::{GraphQLQuery, Response};
 use reqwest;
@@ -16,10 +16,14 @@ type DateTime = String;
 )]
 struct GetAssignments;
 
-async fn perform_queries(course_ids: &Vec<u32>) -> Result<Vec<get_assignments::ResponseData>, Box<dyn Error>> {
+async fn perform_queries(
+    course_ids: &Vec<u32>,
+) -> Result<Vec<get_assignments::ResponseData>, Box<dyn Error>> {
     let mut responses: Vec<get_assignments::ResponseData> = vec![];
     for course_id in course_ids {
-        let variables = get_assignments::Variables { course_id: course_id.to_string() };
+        let variables = get_assignments::Variables {
+            course_id: course_id.to_string(),
+        };
         let response = perform_query(variables).await?;
         responses.push(response);
     }
@@ -27,7 +31,9 @@ async fn perform_queries(course_ids: &Vec<u32>) -> Result<Vec<get_assignments::R
     Ok(responses)
 }
 
-async fn perform_query(variables: get_assignments::Variables) -> Result<get_assignments::ResponseData, Box<dyn Error>> {
+async fn perform_query(
+    variables: get_assignments::Variables,
+) -> Result<get_assignments::ResponseData, Box<dyn Error>> {
     // this is the important line
     let request_body = GetAssignments::build_query(variables);
     let api_token = std::env::var("CANVAS_API_TOKEN")?;
@@ -42,16 +48,14 @@ async fn perform_query(variables: get_assignments::Variables) -> Result<get_assi
     let response_body: Response<get_assignments::ResponseData> = res.json().await?;
 
     match response_body.data {
-        Some(data) => {
-            Ok(data)
-        }
-        None => {
-            Err("No data found".into())
-        }
+        Some(data) => Ok(data),
+        None => Err("No data found".into()),
     }
 }
 
-fn parse_assignments(responses: Vec<get_assignments::ResponseData>) -> Result<Vec<Assignment>, Box<dyn Error>> {
+fn parse_assignments(
+    responses: Vec<get_assignments::ResponseData>,
+) -> Result<Vec<Assignment>, Box<dyn Error>> {
     let mut assignments: Vec<Assignment> = vec![];
     let now = chrono::Utc::now();
     for response in responses {
@@ -60,17 +64,16 @@ fn parse_assignments(responses: Vec<get_assignments::ResponseData>) -> Result<Ve
             for a in course.assignments_connection.unwrap().nodes.unwrap() {
                 let a = a.unwrap();
                 let completed = a.submissions_connection.unwrap().nodes.unwrap().len() != 0;
-                let assignment: Assignment = 
-                    Assignment::new(
-                        a.name.clone().unwrap(),
-                        course.course_nickname.clone(),
-                        a.description,
-                        a.html_url.clone().unwrap(),
-                        a.due_at,
-                        course.name.clone(),
-                        completed,
-                        a.lock_info.unwrap().is_locked
-                    )?;
+                let assignment: Assignment = Assignment::new(
+                    a.name.clone().unwrap(),
+                    course.course_nickname.clone(),
+                    a.description.clone(),
+                    a.html_url.clone().unwrap(),
+                    a.due_at,
+                    course.name.clone(),
+                    completed,
+                    a.lock_info.unwrap().is_locked,
+                )?;
                 if let Some(due) = assignment.date {
                     // If assignment due within 14 days, add to list
                     if due > now && due < now + chrono::Duration::days(21) {

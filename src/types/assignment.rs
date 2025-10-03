@@ -1,6 +1,9 @@
 use chrono::{DateTime, Duration, FixedOffset, TimeZone};
 use serde::{Deserialize, Serialize};
 use std::error::Error;
+use crate::types::link::Link;
+use select::document::Document;
+use select::predicate::Name;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct Assignment {
@@ -13,6 +16,7 @@ pub struct Assignment {
     pub custom: bool,
     pub modified: bool,
     pub locked: bool,
+    pub links: Vec<Link>,
 }
 
 impl Assignment {
@@ -38,7 +42,7 @@ impl Assignment {
             None
         };
 
-        Ok(Self {
+        let mut a = Self {
             name,
             description,
             html_url,
@@ -48,7 +52,10 @@ impl Assignment {
             custom: false,
             modified: false,
             locked,
-        })
+            links: vec![],
+        };
+        a.populate_links();
+        Ok(a)
     }
 
     pub fn empty() -> Self {
@@ -70,7 +77,27 @@ impl Assignment {
             custom: true,
             modified: false,
             locked: false,
+            links: vec![]
         }
+    }
+
+    pub fn populate_links(&mut self) {
+        let description = match &self.description {
+            Some(v) => v,
+            None => return,
+        };
+        self.links = Document::from(description.as_str())
+            .find(Name("a"))
+            .map(|n| {
+                let url = match n.attr("href") {
+                    Some(v) => v,
+                    None => return None,
+                };
+                let text = n.text();
+                Some(Link::new(url.to_string(), text))
+            })
+            .filter_map(|x| x)
+            .collect::<Vec<Link>>();
     }
 
     // Make the due date one day later

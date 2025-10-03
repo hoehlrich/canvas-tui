@@ -16,14 +16,14 @@ use std::{
     time::{Duration, Instant},
 };
 use tokio::sync::Mutex;
-use tui::{
+use ratatui::{
     Terminal,
     backend::{Backend, CrosstermBackend},
     layout::{Alignment, Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
     widgets::{
         Block, Borders, Cell, Paragraph, Row,
-        Table, Wrap,
+        Table, List, ListItem, Wrap,
     },
 };
 
@@ -79,14 +79,15 @@ async fn render_assignments(app: Arc<Mutex<App>>) -> Table<'static> {
         Mode::Normal => Style::default().fg(Color::LightGreen).add_modifier(Modifier::BOLD),
         Mode::NewAssignment(_) => Style::default().fg(Color::LightYellow).add_modifier(Modifier::BOLD),
     };
-    let table = Table::new(rows)
+    let table = Table::default()
+        .rows(rows)
         .header(header)
         .block(
             Block::default()
                 .borders(Borders::ALL)
                 .title("Upcoming Assignments"),
         )
-        .highlight_style(selected_style)
+        .row_highlight_style(selected_style)
         .widths(&[
             Constraint::Ratio(1, 10),
             Constraint::Ratio(6, 10),
@@ -106,7 +107,8 @@ async fn render_grades(app: Arc<Mutex<App>>) -> Table<'static> {
         let cells = vec![format!("{}", g.course), format!("{}", g.grade)];
         Row::new(cells)
     });
-    let table = Table::new(rows)
+    let table = Table::default()
+        .rows(rows)
         .header(header)
         .block(Block::default().borders(Borders::ALL).title("Grades"))
         .widths(&[Constraint::Ratio(1, 2), Constraint::Ratio(1, 2)]);
@@ -148,11 +150,37 @@ async fn render_summary(app: Arc<Mutex<App>>) -> Paragraph<'static> {
         .wrap(Wrap { trim: true })
 }
 
+async fn render_links(app: Arc<Mutex<App>>) -> List<'static> {
+    let app = app.lock().await;
+    if let Some(i) = app.assignments_state.selected() {
+        let links = app.data.assignments[i].links.clone().into_iter().map(|link| {
+            ListItem::new(link.title.clone())
+        }).collect::<Vec<_>>();
+        let selected_style = Style::default().fg(Color::LightGreen).add_modifier(Modifier::BOLD);
+            return List::new(links)
+                .block(
+                    Block::default()
+                    .borders(Borders::ALL)
+                    .title("Links")
+                )
+                .highlight_style(selected_style);
+    } else {
+        return List::new::<Vec<String>>(vec![])
+            .block(
+                Block::default()
+                .borders(Borders::ALL)
+                .title("Links")
+            );
+    }
+}
+
 async fn render_default<B: Backend>(terminal: &mut Terminal<B>, app: Arc<Mutex<App>>) {
     let welcome = render_welcome(app.clone()).await;
     let assignments = render_assignments(app.clone()).await;
     let mut assignments_state = app.lock().await.assignments_state.clone();
     let summary = render_summary(app.clone()).await;
+    let links = render_links(app.clone()).await;
+    let mut links_state = app.lock().await.links_state.clone();
     let grades = render_grades(app.clone()).await;
 
     let _ = terminal.draw(|f| {
@@ -166,17 +194,18 @@ async fn render_default<B: Backend>(terminal: &mut Terminal<B>, app: Arc<Mutex<A
                 ]
                 .as_ref(),
             )
-            .split(f.size());
+            .split(f.area());
 
         let bottom_chunks = Layout::default()
             .direction(Direction::Horizontal)
-            .constraints([Constraint::Ratio(1, 2), Constraint::Ratio(1, 2)].as_ref())
+            .constraints([Constraint::Ratio(1, 3), Constraint::Ratio(1, 3), Constraint::Ratio(1, 3)].as_ref())
             .split(chunks[2]);
 
         f.render_widget(welcome, chunks[0]);
         f.render_stateful_widget(assignments, chunks[1], &mut assignments_state);
         f.render_widget(summary, bottom_chunks[0]);
-        f.render_widget(grades, bottom_chunks[1]);
+        f.render_stateful_widget(links, bottom_chunks[1], &mut links_state);
+        f.render_widget(grades, bottom_chunks[2]);
     });
 }
 
