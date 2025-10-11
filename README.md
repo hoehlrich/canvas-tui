@@ -22,8 +22,8 @@ NOTE: course-ids are defined in ~/.local/share/canvas-tui/data.json
 ### Keybidings
 
 ```
-j -> move selection down
-k -> move selection up
+j -> move assignment selection down
+k -> move assignment selection up
 d -> toggle competion status of selected assignment
 o -> open assignment url in browser
 q -> quit
@@ -34,6 +34,9 @@ n -> enter new assignment mode
     esc/C-c > exit new assignment mode
     j/k -> when due date selected decrement/increment date
 x -> delete custom assignment
+J -> move link selection down
+K -> move link selection up
+O -> open link in browser
 ```
 
 ### Background
@@ -71,9 +74,12 @@ functional web frontend.
 - [X] Grade fetching doesn't work (figured it out: use REST)
 - [X] Canvas assignment link scraping
 - [X] Reinstate links pane
-- [ ] Be able to open links in the link pane
+- [X] Be able to open links in the link pane
+- [X] Write data to file after every modification to state
+- [ ] FEATURE: Sort setting where the user can say if they want the assignments sorted by dude date or a custom order (would enable the user to prioritize assignments
 - [ ] Rework assignment query to use REST instead of graphql
 - [ ] Download pdf files and open in zathura (maybe)
+- [ ] When opening pdf file that's already downloaded check to see if its been modified and update it if so
 - [ ] Add timer column and let it be resetable and pausable (maybe)
 - [ ] Course ID config
 - [ ] Query Course IDs if no config (maybe)

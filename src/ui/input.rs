@@ -19,24 +19,33 @@ pub async fn handle_input(app: Arc<Mutex<App>>) -> Result<bool, Box<dyn Error>> 
 async fn handle_input_normal(app: Arc<Mutex<App>>, key: KeyEvent) -> Result<bool, Box<dyn Error>> {
     match key.modifiers {
         KeyModifiers::NONE => match key.code {
-            KeyCode::Char('j') => app.lock().await.mv(Dir::Down),
-            KeyCode::Char('k') => app.lock().await.mv(Dir::Up),
+            KeyCode::Char('j') => app.lock().await.next_assignment(),
+            KeyCode::Char('k') => app.lock().await.prev_assignment(),
             KeyCode::Char('q') => {
-                app.lock().await.quit()?;
+                app.lock().await.serialize_data()?;
                 return Ok(true);
             }
-            KeyCode::Char('o') => app.lock().await.open().await,
+            KeyCode::Char('o') => app.lock().await.open_assignment().await,
             KeyCode::Char('n') => app.lock().await.new_assignment().await?,
-            KeyCode::Char('r') => app::refresh(app).await?,
+            KeyCode::Char('r') => {
+                app::refresh(app.clone()).await?;
+                app.lock().await.serialize_data()?;
+            },
             KeyCode::Char('d') => app.lock().await.mark_done(),
-            KeyCode::Char('x') => app.lock().await.delete_assignment().await,
+            KeyCode::Char('x') => app.lock().await.delete_assignment().await?,
             KeyCode::Enter => app.lock().await.enter(),
             KeyCode::Esc => app.lock().await.esc(),
             _ => (),
         },
+        KeyModifiers::SHIFT => match key.code {
+            KeyCode::Char('J') => app.lock().await.next_link(),
+            KeyCode::Char('K') => app.lock().await.prev_link(),
+            KeyCode::Char('O') => app.lock().await.open_link().await,
+            _ => (),
+        },
         KeyModifiers::CONTROL => match key.code {
             KeyCode::Char('c') => {
-                app.lock().await.quit()?;
+                app.lock().await.serialize_data()?;
                 return Ok(true);
             }
             _ => (),
@@ -49,12 +58,12 @@ async fn handle_input_normal(app: Arc<Mutex<App>>, key: KeyEvent) -> Result<bool
 async fn handle_input_new_assignment(app: Arc<Mutex<App>>, key: KeyEvent) -> Result<bool, Box<dyn Error>> {
     match key.modifiers {
         KeyModifiers::NONE => match key.code {
-            KeyCode::Esc => app.lock().await.exit_new_assignment_mode().await,
+            KeyCode::Esc => app.lock().await.exit_new_assignment_mode().await?,
             _ => take_new_assignment_input(app.clone(), key).await,
         }
         KeyModifiers::SHIFT => take_new_assignment_input(app.clone(), key).await,
         KeyModifiers::CONTROL => match key.code {
-            KeyCode::Char('c') => app.lock().await.exit_new_assignment_mode().await,
+            KeyCode::Char('c') => app.lock().await.exit_new_assignment_mode().await?,
             _ => (),
         }
         _ => (),
@@ -72,6 +81,27 @@ async fn take_new_assignment_input(app: Arc<Mutex<App>>, key: KeyEvent) {
 
     let i = app.assignments_state.selected().unwrap();
 
+    // Handle switching fields
+    match key.code {
+        KeyCode::Tab => {
+            let new_field = match field {
+                AssignmentField::Course => AssignmentField::Name,
+                AssignmentField::Name => AssignmentField::DueDate,
+                AssignmentField::DueDate => AssignmentField::DueDate,
+            };
+            app.mode = Mode::NewAssignment(new_field);
+        },
+        KeyCode::BackTab => {
+            let new_field = match field {
+                AssignmentField::Course => AssignmentField::Course,
+                AssignmentField::Name => AssignmentField::Course,
+                AssignmentField::DueDate => AssignmentField::Name,
+            };
+            app.mode = Mode::NewAssignment(new_field);
+        },
+        _ => (),
+    }
+
     // Handle the DueDate case
     if field == AssignmentField::DueDate {
         match key.code {
@@ -88,30 +118,14 @@ async fn take_new_assignment_input(app: Arc<Mutex<App>>, key: KeyEvent) {
         AssignmentField::DueDate => unreachable!(), 
     };
 
-    // Handle all non due-date text input
+    // Handle text input
     match key.modifiers {
         KeyModifiers::NONE => match key.code {
             KeyCode::Backspace => {text.pop();},
-            KeyCode::Tab => {
-                let new_field = match field {
-                    AssignmentField::Course => AssignmentField::Name,
-                    AssignmentField::Name => AssignmentField::DueDate,
-                    AssignmentField::DueDate => AssignmentField::DueDate,
-                };
-                app.mode = Mode::NewAssignment(new_field);
-            }
             KeyCode::Char(c) => text.push(c),
             _ => (),
         },
         KeyModifiers::SHIFT => match key.code {
-            KeyCode::BackTab => {
-                let new_field = match field {
-                    AssignmentField::Course => AssignmentField::Course,
-                    AssignmentField::Name => AssignmentField::Course,
-                    AssignmentField::DueDate => AssignmentField::Name,
-                };
-                app.mode = Mode::NewAssignment(new_field);
-            }
             KeyCode::Char(c) => text.push(c),
             _ => (),
         },

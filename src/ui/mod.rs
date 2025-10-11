@@ -169,7 +169,7 @@ async fn render_links(app: Arc<Mutex<App>>) -> List<'static> {
             .block(
                 Block::default()
                 .borders(Borders::ALL)
-                .title("Links")
+                .title("No Links Found")
             );
     }
 }
