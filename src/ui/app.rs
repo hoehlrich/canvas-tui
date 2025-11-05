@@ -110,6 +110,7 @@ impl App {
             assignment.completed = !assignment.completed;
             assignment.modified = true;
         }
+        self.data.sort_assignments();
     }
 
     pub fn enter(&mut self) {

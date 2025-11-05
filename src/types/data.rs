@@ -2,6 +2,7 @@ use std::error::Error;
 use crate::types::assignment::Assignment;
 use crate::types::grade::Grade;
 use serde::{Deserialize, Serialize};
+use std::cmp::Ordering;
 
 #[derive(Serialize, Deserialize)]
 pub struct Data {
@@ -31,7 +32,18 @@ impl Data {
     }
 
     pub fn sort_assignments(&mut self) {
-        self.assignments.sort_by(|a, b| a.date.cmp(&b.date));
+        self.assignments.sort_by(|a, b| {
+            if let (Some(a_date), Some(b_date)) = (a.date, b.date) {
+                match a_date.date_naive().cmp(&b_date.date_naive()) {
+                    Ordering::Equal => a.completed.cmp(&b.completed),
+                    _ => a_date.cmp(&b_date),
+                }
+            } else if let Some(_) = a.date {
+                Ordering::Greater
+            } else {
+                Ordering::Less
+            }
+        });
     }
 
     pub fn update_assignments(&mut self, assignments: Vec<Assignment>) {
@@ -42,6 +54,7 @@ impl Data {
                 }
                 a.locked = assignment.locked;
                 a.description = assignment.description;
+                a.date = assignment.date;
                 a.populate_links();
             } else {
                 self.assignments.push(assignment);
