@@ -72,20 +72,17 @@ functional web frontend.
 - [X] Add a lock symbol to locked assignments
 - [X] Update logic for locked assignments that become unlocked
 - [X] Grade fetching doesn't work (figured it out: use REST)
+- [X] **Migrate to the maintained ratatui**
 - [X] Canvas assignment link scraping
 - [X] Reinstate links pane
 - [X] Be able to open links in the link pane
 - [X] Write data to file after every modification to state
-- [ ] FEATURE: Sort setting where the user can say if they want the assignments sorted by dude date or a custom order (would enable the user to prioritize assignments
+- [ ] FEATURE: notes section of the "Assignment Summary" pane. Can be edited by pressing 'i'
 - [ ] Rework assignment query to use REST instead of graphql
-- [ ] Download pdf files and open in zathura (maybe)
+- [ ] Config file (fields: course_ids, data_dir (optional), config_dir (optional))
+- [ ] Download pdf files and open in zathura, courses should have a download directory for attachments specified by config file
 - [ ] When opening pdf file that's already downloaded check to see if its been modified and update it if so
-- [ ] Add timer column and let it be resetable and pausable (maybe)
-- [ ] Course ID config
-- [ ] Query Course IDs if no config (maybe)
 - [ ] ISSUE: read write precedence with multiple instances working on the same data
-- [ ] Filter assignments by course (new pane idea??)
 - [ ] Custom DIR for data files
-- [ ] Fetch external submission links
+- [ ] Fetch external submission links (try REST query after its been migrated)
 - [ ] If browser is opened with open::this(url) for the first time, allow the browser to remain open after the program exits
-- [ ] **Migrate to the maintained ratatui**
