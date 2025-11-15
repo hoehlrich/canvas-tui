@@ -189,6 +189,8 @@ pub async fn refresh(app: Arc<Mutex<App>>) -> Result<(), Box<dyn Error>> {
     let app_clone = Arc::clone(&app);
     tokio::task::spawn(async move {
         let course_ids = app.lock().await.data.course_ids.clone();
+
+        // query full list of assignments
         let assignments = match crate::queries::assignments::query_assignments(&course_ids).await {
             Ok(a) => a,
             Err(e) => {
@@ -197,7 +199,29 @@ pub async fn refresh(app: Arc<Mutex<App>>) -> Result<(), Box<dyn Error>> {
             }
         };
 
+        // store the url of the selected assignment
+        let mut selected_url = None;
+        if let Some(selected_i) = app.clone().lock().await.assignments_state.selected() {
+            selected_url = Some(app.clone().lock().await.data.assignments[selected_i].html_url.clone());
+        }
+
         app_clone.lock().await.data.update_assignments(assignments);
+
+        // Adjust assignments_state selected index (indeces not the same)
+        if let Some(u) = selected_url {
+            let new_i = app
+                .clone()
+                .lock()
+                .await
+                .data
+                .assignments
+                .iter()
+                .enumerate()
+                .find(|a| a.1.html_url == u)
+                .map_or_else(|| 0, |v| v.0);
+            app.clone().lock().await.assignments_state.select(Some(new_i));
+        }
+
         let grades = match crate::queries::grades::query_grades(&course_ids).await {
             Ok(g) => g,
             Err(e) => {

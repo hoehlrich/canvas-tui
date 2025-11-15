@@ -77,6 +77,8 @@ functional web frontend.
 - [X] Reinstate links pane
 - [X] Be able to open links in the link pane
 - [X] Write data to file after every modification to state
+- [X] Marking assignments as complete moves them to the bottom of their day in the order
+- [X] Make index stay on the same assignment if refresh occurs and changes indeces
 - [ ] FEATURE: notes section of the "Assignment Summary" pane. Can be edited by pressing 'i'
 - [ ] Rework assignment query to use REST instead of graphql
 - [ ] Config file (fields: course_ids, data_dir (optional), config_dir (optional))
