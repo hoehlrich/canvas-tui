@@ -45,6 +45,27 @@ impl App {
         }
     }
 
+    pub fn select_by_url(&mut self, url: Option<String>) {
+        if let Some(u) = url {
+            let new_i = self
+                .data
+                .assignments
+                .iter()
+                .enumerate()
+                .find(|a| a.1.html_url == u)
+                .map_or_else(|| 0, |v| v.0);
+            self.assignments_state.select(Some(new_i));
+        }
+    }
+
+    pub fn get_selected_url(&self) -> Option<String> {
+        let mut selected_url = None;
+        if let Some(selected_i) = self.assignments_state.selected() {
+            selected_url = Some(self.data.assignments[selected_i].html_url.clone());
+        }
+        selected_url
+    }
+
     pub async fn new_assignment(&mut self) -> Result<(), Box<dyn Error>> {
         self.mode = Mode::NewAssignment(AssignmentField::Course);
         match self.mode {
@@ -110,7 +131,9 @@ impl App {
             assignment.completed = !assignment.completed;
             assignment.modified = true;
         }
+        let selected_url = self.get_selected_url();
         self.data.sort_assignments();
+        self.select_by_url(selected_url);
     }
 
     pub fn enter(&mut self) {
@@ -199,28 +222,13 @@ pub async fn refresh(app: Arc<Mutex<App>>) -> Result<(), Box<dyn Error>> {
             }
         };
 
-        // store the url of the selected assignment
-        let mut selected_url = None;
-        if let Some(selected_i) = app.clone().lock().await.assignments_state.selected() {
-            selected_url = Some(app.clone().lock().await.data.assignments[selected_i].html_url.clone());
-        }
+        // Store pre-refresh selected url
+        let selected_url = app_clone.lock().await.get_selected_url();
 
         app_clone.lock().await.data.update_assignments(assignments);
 
-        // Adjust assignments_state selected index (indeces not the same)
-        if let Some(u) = selected_url {
-            let new_i = app
-                .clone()
-                .lock()
-                .await
-                .data
-                .assignments
-                .iter()
-                .enumerate()
-                .find(|a| a.1.html_url == u)
-                .map_or_else(|| 0, |v| v.0);
-            app.clone().lock().await.assignments_state.select(Some(new_i));
-        }
+        // Restore selection to select pre-refresh url
+        app_clone.lock().await.select_by_url(selected_url);
 
         let grades = match crate::queries::grades::query_grades(&course_ids).await {
             Ok(g) => g,
