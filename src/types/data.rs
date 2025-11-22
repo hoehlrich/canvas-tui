@@ -8,7 +8,6 @@ use std::cmp::Ordering;
 pub struct Data {
     pub assignments: Vec<Assignment>,
     pub grades: Vec<Grade>,
-    pub course_ids: Vec<u32>,
 }
 
 impl Data {
@@ -16,7 +15,6 @@ impl Data {
         Self {
             assignments: Vec::new(),
             grades: Vec::new(),
-            course_ids: Vec::new(),
         }
     }
 

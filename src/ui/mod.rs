@@ -209,7 +209,7 @@ async fn render_default<B: Backend>(terminal: &mut Terminal<B>, app: Arc<Mutex<A
     });
 }
 
-pub async fn run(data: Data, path: String) -> Result<(), Box<dyn Error>> {
+pub async fn run(data_path: String, course_ids: Vec<u32>, data: Data,) -> Result<(), Box<dyn Error>> {
     // Setup terminal
     enable_raw_mode()?;
     let mut stdout = io::stdout();
@@ -219,9 +219,10 @@ pub async fn run(data: Data, path: String) -> Result<(), Box<dyn Error>> {
 
     // Create app and run it
     let app = Arc::new(Mutex::new(App::new(
-        data,
-        path,
+        data_path,
         Duration::from_millis(1000),
+        course_ids,
+        data,
     )));
 
     // Initial refresh

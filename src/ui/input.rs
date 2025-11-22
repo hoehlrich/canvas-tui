@@ -1,5 +1,5 @@
 use crossterm::event::{self, Event, KeyEvent, KeyCode, KeyModifiers};
-use super::app::{self, App, Dir, Mode, AssignmentField};
+use super::app::{self, App, Mode, AssignmentField};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use std::error::Error;

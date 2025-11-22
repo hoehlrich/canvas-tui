@@ -1,5 +1,5 @@
 use crate::queries::GRAPHQL_URL;
-use crate::types::{assignment::Assignment, link::Link};
+use crate::types::assignment::Assignment;
 
 use graphql_client::{GraphQLQuery, Response};
 use reqwest;

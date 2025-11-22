@@ -5,11 +5,6 @@ use std::sync::Arc;
 use std::error::Error;
 use crate::types::{assignment::Assignment, data::Data};
 
-pub enum Dir {
-    Up,
-    Down,
-}
-
 #[derive(PartialEq, Eq, Copy, Clone)]
 pub enum AssignmentField {
     Course,
@@ -25,8 +20,9 @@ pub enum Mode {
 }
 
 pub struct App {
-    pub path: String,
+    pub data_path: String,
     pub tick_rate: Duration,
+    course_ids: Vec<u32>,
     pub assignments_state: TableState,
     pub links_state: ListState,
     pub data: Data,
@@ -34,10 +30,11 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(data: Data, path: String, tick_rate: Duration) -> Self {
+    pub fn new(data_path: String, tick_rate: Duration, course_ids: Vec<u32>, data: Data) -> Self {
         App {
-            path,
+            data_path,
             tick_rate,
+            course_ids,
             assignments_state: TableState::default(),
             links_state: ListState::default(),
             data,
@@ -200,7 +197,7 @@ impl App {
     }
 
     pub fn serialize_data(&self) -> Result<(), Box<dyn Error>> {
-        self.data.serialize_to_file(&self.path)
+        self.data.serialize_to_file(&self.data_path)
     }
 
     pub fn on_tick(&mut self) {
@@ -211,7 +208,7 @@ impl App {
 pub async fn refresh(app: Arc<Mutex<App>>) -> Result<(), Box<dyn Error>> {
     let app_clone = Arc::clone(&app);
     tokio::task::spawn(async move {
-        let course_ids = app.lock().await.data.course_ids.clone();
+        let course_ids = app.lock().await.course_ids.clone();
 
         // query full list of assignments
         let assignments = match crate::queries::assignments::query_assignments(&course_ids).await {
@@ -239,7 +236,7 @@ pub async fn refresh(app: Arc<Mutex<App>>) -> Result<(), Box<dyn Error>> {
         };
         app_clone.lock().await.data.remove_past_assignments();
         app_clone.lock().await.data.grades = grades;
-        let path = app_clone.lock().await.path.clone();
+        let path = app_clone.lock().await.data_path.clone();
         match app_clone.lock().await.data.serialize_to_file(&path) {
             Ok(_) => (),
             Err(e) => {
