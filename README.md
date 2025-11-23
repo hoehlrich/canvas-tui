@@ -107,7 +107,7 @@ This section outlines the keyboard shortcuts for navigating the TUI and interact
 > * **j / k:** When the due date field is selected, decrements/increments the date.
 > * **Esc / Ctrl+c:** Exits the new assignment creation mode
 
---
+---
 
 ## Background
 
@@ -118,9 +118,10 @@ the Canvas API and TUI (removed web frontend and groq integration). Ideally,
 this project's backend connects back to the original project to provide a more
 functional web frontend.
 
---
+---
 
 ## TODO
+- [ ] FIX: place holding for refresh reordering not working -> implement Hash on Assignment to fix
 - [ ] FEATURE: notes section of the "Assignment Summary" pane. Can be edited by pressing 'i'
 - [ ] Rework assignment query to use REST instead of graphql
 - [ ] Download pdf files and open in zathura, courses should have a download directory for attachments specified by config file

@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+#[derive(Hash, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct Link {
     pub url: String,
     pub title: String

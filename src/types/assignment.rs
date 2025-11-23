@@ -5,7 +5,7 @@ use crate::types::link::Link;
 use select::document::Document;
 use select::predicate::Name;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Hash, Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct Assignment {
     pub name: String,
     pub description: Option<String>,

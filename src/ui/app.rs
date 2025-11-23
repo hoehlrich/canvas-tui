@@ -1,6 +1,7 @@
 use ratatui::widgets::{ListState, TableState};
 use tokio::sync::Mutex;
-use std::time::Duration;
+use std::hash::{DefaultHasher, Hasher};
+use std::{hash::Hash, time::Duration};
 use std::sync::Arc;
 use std::error::Error;
 use crate::types::{assignment::Assignment, data::Data};
@@ -42,25 +43,32 @@ impl App {
         }
     }
 
-    pub fn select_by_url(&mut self, url: Option<String>) {
-        if let Some(u) = url {
+    pub fn select_by_hash(&mut self, hash: Option<u64>) {
+        println!("{}", hash.unwrap());
+        if let Some(h) = hash {
             let new_i = self
                 .data
                 .assignments
                 .iter()
                 .enumerate()
-                .find(|a| a.1.html_url == u)
+                .find(|a| {
+                    let mut hasher = DefaultHasher::new();
+                    a.1.hash(&mut hasher);
+                    hasher.finish() == h
+                })
                 .map_or_else(|| 0, |v| v.0);
             self.assignments_state.select(Some(new_i));
         }
     }
 
-    pub fn get_selected_url(&self) -> Option<String> {
-        let mut selected_url = None;
+    pub fn get_selected_hash(&self) -> Option<u64> {
+        let mut selected_hash = None;
         if let Some(selected_i) = self.assignments_state.selected() {
-            selected_url = Some(self.data.assignments[selected_i].html_url.clone());
+            let mut hasher = DefaultHasher::new();
+            self.data.assignments[selected_i].hash(&mut hasher);
+            selected_hash = Some(hasher.finish());
         }
-        selected_url
+        selected_hash
     }
 
     pub async fn new_assignment(&mut self) -> Result<(), Box<dyn Error>> {
@@ -128,9 +136,9 @@ impl App {
             assignment.completed = !assignment.completed;
             assignment.modified = true;
         }
-        let selected_url = self.get_selected_url();
+        let selected_hash = self.get_selected_hash();
         self.data.sort_assignments();
-        self.select_by_url(selected_url);
+        self.select_by_hash(selected_hash);
     }
 
     pub fn enter(&mut self) {
@@ -219,13 +227,13 @@ pub async fn refresh(app: Arc<Mutex<App>>) -> Result<(), Box<dyn Error>> {
             }
         };
 
-        // Store pre-refresh selected url
-        let selected_url = app_clone.lock().await.get_selected_url();
+        // Store pre-refresh selected assignment hash
+        let selected_hash = app_clone.lock().await.get_selected_hash();
 
         app_clone.lock().await.data.update_assignments(assignments);
 
-        // Restore selection to select pre-refresh url
-        app_clone.lock().await.select_by_url(selected_url);
+        // Restore selection to select pre-refresh hash
+        app_clone.lock().await.select_by_hash(selected_hash);
 
         let grades = match crate::queries::grades::query_grades(&course_ids).await {
             Ok(g) => g,
