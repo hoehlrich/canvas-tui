@@ -44,7 +44,6 @@ impl App {
     }
 
     pub fn select_by_hash(&mut self, hash: Option<u64>) {
-        println!("{}", hash.unwrap());
         if let Some(h) = hash {
             let new_i = self
                 .data
