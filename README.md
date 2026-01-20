@@ -121,11 +121,9 @@ functional web frontend.
 ---
 
 ## TODO
-- [ ] FIX: place holding for refresh reordering not working -> implement Hash on Assignment to fix
 - [ ] FEATURE: notes section of the "Assignment Summary" pane. Can be edited by pressing 'i'
 - [ ] Rework assignment query to use REST instead of graphql
-- [ ] Download pdf files and open in zathura, courses should have a download directory for attachments specified by config file
+- [ ] Download pdf files and open in default pdf viewer, courses should have a download directory for attachments specified by config file
 - [ ] When opening pdf file that's already downloaded check to see if its been modified and update it if so
-- [ ] ISSUE: read write precedence with multiple instances working on the same data
 - [ ] Fetch external submission links (try REST query after its been migrated)
 - [ ] If browser is opened with open::this(url) for the first time, allow the browser to remain open after the program exits

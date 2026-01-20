@@ -70,6 +70,8 @@ async fn render_assignments(app: Arc<Mutex<App>>) -> Table<'static> {
             Style::default()
                 .fg(Color::DarkGray)
                 .add_modifier(Modifier::CROSSED_OUT)
+        } else if a.locked {
+            Style::default().fg(Color::DarkGray)
         } else {
             Style::default()
         };
@@ -120,7 +122,7 @@ async fn render_welcome(app: Arc<Mutex<App>>) -> Paragraph<'static> {
     Paragraph::new(format!(
         "\nToday is {}, there are {} upcoming assignments",
         chrono::Local::now().format("%A %B %-d"),
-        app.data.get_number_incomplete()
+        app.data.get_number_upcoming()
     ))
     .block(
         Block::default()
