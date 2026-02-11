@@ -35,6 +35,7 @@ async fn handle_input_normal(app: Arc<Mutex<App>>, key: KeyEvent) -> Result<bool
             KeyCode::Char('x') => app.lock().await.delete_assignment().await?,
             KeyCode::Enter => app.lock().await.enter(),
             KeyCode::Esc => app.lock().await.esc(),
+            KeyCode::Char(n) => app.lock().await.number_pressed(n.to_digit(10).unwrap() as usize),
             _ => (),
         },
         KeyModifiers::SHIFT => match key.code {
@@ -52,6 +53,7 @@ async fn handle_input_normal(app: Arc<Mutex<App>>, key: KeyEvent) -> Result<bool
         },
         _ => (),
     }
+
     Ok(false)
 }
 

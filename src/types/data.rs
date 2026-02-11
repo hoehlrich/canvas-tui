@@ -8,6 +8,8 @@ use std::cmp::Ordering;
 pub struct Data {
     pub assignments: Vec<Assignment>,
     pub grades: Vec<Grade>,
+    #[serde(skip)]
+    pub courses: Vec<String>,
 }
 
 impl Data {
@@ -15,6 +17,7 @@ impl Data {
         Self {
             assignments: Vec::new(),
             grades: Vec::new(),
+            courses: Vec::new(),
         }
     }
 
@@ -76,7 +79,13 @@ impl Data {
     }
 
     pub fn deserialize(data: &str) -> Result<Self, Box<dyn Error>> {
-        Ok(serde_json::from_str(data)?)
+        let mut data: Data = serde_json::from_str(data)?;
+        for a in &data.assignments {
+            if !data.courses.contains(&a.course) {
+                data.courses.push(a.course.clone());
+            }
+        }
+        Ok(data)
     }
 
     pub fn deserialize_from_file(path: &str) -> Result<Self, Box<dyn Error>> {

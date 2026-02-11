@@ -4,6 +4,7 @@ use std::hash::{DefaultHasher, Hasher};
 use std::{hash::Hash, time::Duration};
 use std::sync::Arc;
 use std::error::Error;
+use std::collections::HashMap;
 use crate::types::{assignment::Assignment, data::Data};
 
 #[derive(PartialEq, Eq, Copy, Clone)]
@@ -12,7 +13,6 @@ pub enum AssignmentField {
     Name,
     DueDate,
 }
-
 
 #[derive(PartialEq, Eq, Copy, Clone)]
 pub enum Mode {
@@ -28,10 +28,17 @@ pub struct App {
     pub links_state: ListState,
     pub data: Data,
     pub mode: Mode,
+    pub courses_state: HashMap<String, bool>,
 }
 
 impl App {
     pub fn new(data_path: String, tick_rate: Duration, course_ids: Vec<u32>, data: Data) -> Self {
+        // Populate
+        let courses_state: HashMap<String, bool> = data.courses
+            .iter()
+            .map(|s| (s.clone(), true))
+            .collect();
+
         App {
             data_path,
             tick_rate,
@@ -40,6 +47,19 @@ impl App {
             links_state: ListState::default(),
             data,
             mode: Mode::Normal,
+            courses_state,
+        }
+    }
+
+    pub fn number_pressed(&mut self, n: usize) {
+        if let Some(course) = self.data.courses.get(n - 1) {
+            self.courses_state.entry(course.to_string()).and_modify(|v| *v = !*v);
+
+            if let Some(i) = self.assignments_state.selected() {
+                if !self.assignment_visible(i) {
+                    self.next_assignment();
+                }
+            }
         }
     }
 
@@ -166,6 +186,17 @@ impl App {
                 self.links_state.select(Some(0));
             }
         }
+
+        // If selected assignment is hidden go to next assignment
+        if let Some(i) = self.assignments_state.selected() {
+            if !self.assignment_visible(i) {
+                if i >= self.data.assignments.len() - 1 {
+                    self.assignments_state.select(None);
+                } else {
+                    self.next_assignment();
+                }
+            }
+        }
     }
 
     pub fn prev_assignment(&mut self) {
@@ -178,6 +209,17 @@ impl App {
             self.assignments_state.select(Some(prev));
         } else if self.data.assignments.len() > 0 {
             self.assignments_state.select(Some(0));
+        }
+
+        // If selected assignment is hidden go to the previous assignment
+        if let Some(i) = self.assignments_state.selected() {
+            if !self.assignment_visible(i) {
+                if i == 0 {
+                    self.assignments_state.select(None);
+                } else {
+                    self.prev_assignment();
+                }
+            }
         }
     }
 
@@ -201,6 +243,10 @@ impl App {
             };
             self.links_state.select(Some(prev));
         }
+    }
+
+    pub fn assignment_visible(&self, i: usize) -> bool {
+        *self.courses_state.get(&self.data.assignments[i].course).unwrap_or(&true)
     }
 
     pub fn serialize_data(&self) -> Result<(), Box<dyn Error>> {

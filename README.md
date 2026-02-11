@@ -121,7 +121,6 @@ functional web frontend.
 ---
 
 ## TODO
-- [ ] FEATURE: notes section of the "Assignment Summary" pane. Can be edited by pressing 'i'
 - [ ] Rework assignment query to use REST instead of graphql
 - [ ] Download pdf files and open in default pdf viewer, courses should have a download directory for attachments specified by config file
 - [ ] When opening pdf file that's already downloaded check to see if its been modified and update it if so

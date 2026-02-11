@@ -14,6 +14,7 @@ use std::{
     error::Error,
     io,
     time::{Duration, Instant},
+    collections::HashMap,
 };
 use tokio::sync::Mutex;
 use ratatui::{
@@ -25,6 +26,7 @@ use ratatui::{
         Block, Borders, Cell, Paragraph, Row,
         Table, List, ListItem, Wrap,
     },
+    text::{Line, Span},
 };
 
 async fn render_assignments(app: Arc<Mutex<App>>) -> Table<'static> {
@@ -50,7 +52,7 @@ async fn render_assignments(app: Arc<Mutex<App>>) -> Table<'static> {
     }
 
     let header = Row::new(header_cells).style(bold).height(1);
-    let rows = app.data.assignments.iter().map(|a| {
+    let rows = app.data.assignments.iter().enumerate().map(|(i, a)| {
         let date = if let Some(date) = a.date {
             date.format("%A %-d, %H:%M").to_string()
         } else {
@@ -66,15 +68,20 @@ async fn render_assignments(app: Arc<Mutex<App>>) -> Table<'static> {
             name,
             format!("{}", date),
         ];
-        let style = if a.completed {
-            Style::default()
-                .fg(Color::DarkGray)
-                .add_modifier(Modifier::CROSSED_OUT)
+
+        let mut style = if !app.assignment_visible(i) {
+            Style::default().fg(Color::Black)
+        } else if a.completed {
+            Style::default().fg(Color::DarkGray)
         } else if a.locked {
             Style::default().fg(Color::DarkGray)
         } else {
             Style::default()
         };
+
+        if a.completed {
+            style = style.add_modifier(Modifier::CROSSED_OUT);
+        }
         Row::new(cells).style(style)
     });
     let selected_style = match app.mode {
@@ -133,20 +140,26 @@ async fn render_welcome(app: Arc<Mutex<App>>) -> Paragraph<'static> {
     .wrap(Wrap { trim: true })
 }
 
-async fn render_summary(app: Arc<Mutex<App>>) -> Paragraph<'static> {
+async fn render_courses(app: Arc<Mutex<App>>) -> Paragraph<'static> {
     let app = app.lock().await;
-    let summary = if let Some(i) = app.assignments_state.selected() {
-        let assignment = &app.data.assignments[i];
-        let s = format!("Course: {}\nName: {}\n", assignment.course, assignment.name);
-        s
-    } else {
-        "No assignment selected".to_string()
-    };
-    Paragraph::new(summary)
+
+    let text = app.data.courses.iter().enumerate().map(|(i, course)| {
+        let style = if *app.courses_state.get(course).unwrap_or(&true) {
+            Style::default().add_modifier(Modifier::BOLD)
+        } else {
+            Style::default().fg(Color::DarkGray)
+        };
+        vec![
+            Span::styled(format!("{}: ", i + 1), Style::default()),
+            Span::styled(format!("{}", course), style).into()
+        ].into()
+    }).collect::<Vec<Line<'_>>>();
+
+    Paragraph::new(text)
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .title("Assignment Summary"),
+                .title("Courses"),
         )
         .alignment(Alignment::Left)
         .wrap(Wrap { trim: true })
@@ -180,7 +193,7 @@ async fn render_default<B: Backend>(terminal: &mut Terminal<B>, app: Arc<Mutex<A
     let welcome = render_welcome(app.clone()).await;
     let assignments = render_assignments(app.clone()).await;
     let mut assignments_state = app.lock().await.assignments_state.clone();
-    let summary = render_summary(app.clone()).await;
+    let courses = render_courses(app.clone()).await;
     let links = render_links(app.clone()).await;
     let mut links_state = app.lock().await.links_state.clone();
     let grades = render_grades(app.clone()).await;
@@ -200,13 +213,13 @@ async fn render_default<B: Backend>(terminal: &mut Terminal<B>, app: Arc<Mutex<A
 
         let bottom_chunks = Layout::default()
             .direction(Direction::Horizontal)
-            .constraints([Constraint::Ratio(1, 3), Constraint::Ratio(1, 3), Constraint::Ratio(1, 3)].as_ref())
+            .constraints([Constraint::Ratio(2, 4), Constraint::Ratio(1, 4), Constraint::Ratio(1, 4)].as_ref())
             .split(chunks[2]);
 
         f.render_widget(welcome, chunks[0]);
         f.render_stateful_widget(assignments, chunks[1], &mut assignments_state);
-        f.render_widget(summary, bottom_chunks[0]);
-        f.render_stateful_widget(links, bottom_chunks[1], &mut links_state);
+        f.render_stateful_widget(links, bottom_chunks[0], &mut links_state);
+        f.render_widget(courses, bottom_chunks[1]);
         f.render_widget(grades, bottom_chunks[2]);
     });
 }
