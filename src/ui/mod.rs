@@ -14,7 +14,6 @@ use std::{
     error::Error,
     io,
     time::{Duration, Instant},
-    collections::HashMap,
 };
 use tokio::sync::Mutex;
 use ratatui::{
@@ -69,20 +68,19 @@ async fn render_assignments(app: Arc<Mutex<App>>) -> Table<'static> {
             format!("{}", date),
         ];
 
-        let mut style = if !app.assignment_visible(i) {
-            Style::default().fg(Color::Black)
-        } else if a.completed {
-            Style::default().fg(Color::DarkGray)
+        let style = if a.completed {
+            Style::default().fg(Color::DarkGray).add_modifier(Modifier::CROSSED_OUT)
         } else if a.locked {
             Style::default().fg(Color::DarkGray)
         } else {
             Style::default()
         };
 
-        if a.completed {
-            style = style.add_modifier(Modifier::CROSSED_OUT);
+        if app.assignment_visible(i) {
+            Row::new(cells).style(style)
+        } else {
+            Row::new(vec![""])
         }
-        Row::new(cells).style(style)
     });
     let selected_style = match app.mode {
         Mode::Normal => Style::default().fg(Color::LightGreen).add_modifier(Modifier::BOLD),

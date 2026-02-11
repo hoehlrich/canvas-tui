@@ -65,7 +65,7 @@ impl Data {
     }
 
     pub fn get_number_upcoming(&self) -> usize {
-        self.assignments.iter().filter(|a| (!a.completed && !a.locked)).count()
+        self.assignments.iter().filter(|a| !a.completed && !a.locked).count()
     }
 
     pub fn serialize(&self) -> Result<String, Box<dyn Error>> {
@@ -85,6 +85,7 @@ impl Data {
                 data.courses.push(a.course.clone());
             }
         }
+        data.courses.sort();
         Ok(data)
     }
 
