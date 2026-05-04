@@ -51,7 +51,7 @@ impl App {
         }
     }
 
-    pub fn number_pressed(&mut self, n: usize) {
+    pub fn number_pressed(&mut self, n: usize) -> Result<(), Box<dyn Error>> {
         if let Some(course) = self.data.courses.get(n - 1) {
             self.courses_state.entry(course.to_string()).and_modify(|v| *v = !*v);
 
@@ -61,6 +61,7 @@ impl App {
                 }
             }
         }
+        self.serialize_data()
     }
 
     pub fn select_by_hash(&mut self, hash: Option<u64>) {
@@ -149,7 +150,7 @@ impl App {
         }
     }
 
-    pub fn mark_done(&mut self) {
+    pub fn mark_done(&mut self) -> Result<(), Box<dyn Error>> {
         if let Some(a) = self.assignments_state.selected() {
             let assignment = &mut self.data.assignments[a];
             assignment.completed = !assignment.completed;
@@ -158,6 +159,7 @@ impl App {
         let selected_hash = self.get_selected_hash();
         self.data.sort_assignments();
         self.select_by_hash(selected_hash);
+        self.serialize_data()
     }
 
     pub fn enter(&mut self) {

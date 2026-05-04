@@ -50,9 +50,7 @@ impl Data {
     pub fn update_assignments(&mut self, assignments: Vec<Assignment>) {
         for assignment in assignments {
             if let Some(a) = self.assignments.iter_mut().find(|a| a.html_url == assignment.html_url) {
-                if !a.modified {
-                    a.completed |= assignment.completed;
-                }
+                a.completed |= assignment.completed;
                 a.locked = assignment.locked;
                 a.description = assignment.description;
                 a.date = assignment.date;

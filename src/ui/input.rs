@@ -31,14 +31,14 @@ async fn handle_input_normal(app: Arc<Mutex<App>>, key: KeyEvent) -> Result<bool
                 app::refresh(app.clone()).await?;
                 app.lock().await.serialize_data()?;
             },
-            KeyCode::Char('d') => app.lock().await.mark_done(),
+            KeyCode::Char('d') => app.lock().await.mark_done()?,
             KeyCode::Char('x') => app.lock().await.delete_assignment().await?,
             KeyCode::Enter => app.lock().await.enter(),
             KeyCode::Esc => app.lock().await.esc(),
             KeyCode::Char(n) => match n.to_digit(10) {
-                Some(v) => app.lock().await.number_pressed(v as usize),
+                Some(v) => app.lock().await.number_pressed(v as usize)?,
                 None => (),
-            } 
+            }
             _ => (),
         },
         KeyModifiers::SHIFT => match key.code {
