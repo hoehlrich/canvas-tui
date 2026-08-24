@@ -38,7 +38,7 @@ async fn perform_query(
     let request_body = GetAssignments::build_query(variables);
     let api_token = std::env::var("CANVAS_API_TOKEN")?;
 
-    let client = reqwest::Client::new();
+    let client = crate::queries::client()?;
     let res = client
         .post(GRAPHQL_URL)
         .bearer_auth(api_token)

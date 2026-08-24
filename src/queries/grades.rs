@@ -30,7 +30,7 @@ pub async fn query_grades(course_ids: &Vec<u32>) -> Result<Vec<Grade>, Box<dyn E
 
 async fn perform_query(course_id: &u32) -> Result<Option<Grade>, Box<dyn Error>> {
     let api_token = std::env::var("CANVAS_API_TOKEN")?;
-    let client = reqwest::Client::new();
+    let client = crate::queries::client()?;
 
     let grade_url = format!(
         "{}/courses/{}/enrollments?user_id=self&include[]=total_scores",
